@@ -1,0 +1,111 @@
+.meeting-layout {
+  display: flex;
+  height: calc(100vh - 56px);
+  background: #0a0a0a;
+}
+
+.meeting-video {
+  flex: 1;
+  background: #000;
+}
+
+.meeting-sidebar {
+  width: 400px;
+  background: var(--bg);
+  border-left: 2px solid var(--ink);
+  display: flex;
+  flex-direction: column;
+}
+
+.meeting-sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.meeting-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.meeting-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--ink-3);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--line);
+  cursor: pointer;
+  transition: all var(--tr);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.meeting-tab:last-child { border-right: none; }
+.meeting-tab:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.meeting-tab.active {
+  background: var(--surface-2);
+  color: var(--signal);
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 var(--signal);
+}
+
+.meeting-panel {
+  flex: 1;
+  padding: 16px 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.meeting-notes {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  resize: none;
+  border: 1px solid var(--line);
+  padding: 12px;
+  background: var(--surface);
+}
+
+.meeting-actions {
+  display: flex;
+  gap: 8px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 1080px) {
+  .meeting-layout {
+    flex-direction: column;
+  }
+  .meeting-sidebar {
+    width: 100%;
+    height: 50%;
+    border-left: none;
+    border-top: 2px solid var(--ink);
+  }
+  .meeting-video {
+    height: 50%;
+  }
+}
+
+@media (max-width: 600px) {
+  .meeting-sidebar { height: 60%; }
+  .meeting-video { height: 40%; }
+  .meeting-sidebar-head { padding: 12px 14px; }
+  .meeting-panel { padding: 12px 14px; }
+  .meeting-actions { padding: 10px 14px; }
+  .meeting-tab { padding: 8px 10px; font-size: 0.68rem; }
+}

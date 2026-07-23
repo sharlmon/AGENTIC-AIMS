@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AIMS — Design Direction</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Serif:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #ffffff;
+    --surface: #f5f5f5;
+    --ink: #000000;
+    --ink-2: #404040;
+    --ink-3: #888888;
+    --blue: #0066ff;
+    --blue-dark: #0052cc;
+    --line: #e0e0e0;
+    --line-strong: #000000;
+    --mono: 'Space Mono', monospace;
+    --serif: 'Instrument Serif', serif;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink-2);
+    line-height: 1.5;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes lineGrow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  .animate-fade-up { animation: fadeUp 0.5s ease both; }
+  .animate-line { animation: lineGrow 0.6s cubic-bezier(0.16,1,0.3,1) both; transform-origin: left; }
+
+  .delay-1 { animation-delay: 0.05s; }
+  .delay-2 { animation-delay: 0.1s; }
+  .delay-3 { animation-delay: 0.15s; }
+  .delay-4 { animation-delay: 0.2s; }
+  .delay-5 { animation-delay: 0.25s; }
+  .delay-6 { animation-delay: 0.3s; }
+  .delay-7 { animation-delay: 0.35s; }
+  .delay-8 { animation-delay: 0.4s; }
+  .delay-9 { animation-delay: 0.45s; }
+  .delay-10 { animation-delay: 0.5s; }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 48px; }
+  .section { padding: 100px 0; position: relative; }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--blue);
+    font-weight: 400;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::before {
+    content: '//';
+    color: var(--ink-3);
+  }
+
+  .display {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+  .display em {
+    font-style: italic;
+    color: var(--blue);
+  }
+
+  .lede {
+    font-size: 1rem;
+    color: var(--ink-2);
+    max-width: 600px;
+    line-height: 1.65;
+    font-weight: 400;
+  }
+
+  /* Nav */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 0;
+    background: var(--bg);
+    border-bottom: 2px solid var(--ink);
+  }
+  nav .nav-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .logo-mark {
+    width: 24px; height: 24px;
+    background: var(--blue);
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    display: grid; place-items: center;
+  }
+  .logo-mark svg { display: block; }
+  .nav-links { display: flex; gap: 0; }
+  .nav-links a {
+    padding: 0 16px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: all 0.15s ease;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .nav-links a:last-child { border-right: none; }
+  .nav-links a:hover {
+    color: var(--ink);
+    background: var(--surface);
+  }
+  .nav-links a.active {
+    color: var(--blue);
+    background: var(--surface);
+  }
+  .nav-cta {
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0 20px;
+    height: 56px;
+    border: none;
+    border-left: 2px solid var(--ink);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .nav-cta:hover {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 140px 0 100px;
+    border-bottom: 2px solid var(--ink);
+    position: relative;
+  }
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero-meta-item {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .hero-meta-item strong {
+    color: var(--ink);
+    font-weight: 700;
+    display: block;
+    margin-top: 4px;
+    font-size: 0.85rem;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 28px;
+    text-transform: uppercase;
+  }
+  .hero-badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 0;
+    background: var(--blue);
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(3.2rem, 6vw, 5rem);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+    color: var(--ink);
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--blue);
+  }
+  .hero-lede {
+    font-size: 1.05rem;
+    color: var(--ink-2);
+    max-width: 560px;
+    margin-bottom: 36px;
+    line-height: 1.65;
+    font-weight: 400;
+  }
+  .hero-actions { display: flex; gap: 0; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    border: 2px solid var(--ink);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: var(--mono);
+    text-transform: uppercase;
+  }
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--blue);
+  }
+  .btn-primary:hover {
+    background: var(--blue-dark);
+    border-color: var(--blue-dark);
+  }
+  .btn-ghost {
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .btn-ghost:hover {
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  /* Workflow */
+  .workflow-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    border-top: 2px solid var(--ink);
+    border-left: 2px solid var(--ink);
+  }
+  .workflow-step {
+    padding: 24px 20px;
+    background: var(--bg);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    transition: all 0.15s ease;
+    position: relative;
+  }
+  .workflow-step:hover {
+    background: var(--surface);
+  }
+  .workflow-step::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: var(--blue);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  .workflow-step:hover::after {
+    transform: scaleX(1);
+  }
+  .workflow-num {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .workflow-step h3 {
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .workflow-step p {
+    font-size: 0.82rem;
+    color: var(--ink-3);
+    line-height: 1.55;
+    font-weight: 400;
+  }
+
+  /* Features */
+  .features-header {
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 2px solid var(--ink);
+    border-left: 2px solid var(--ink);
+  }
+  .feature-card {
+    padding: 32px 28px;
+    background: var(--bg);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    transition: all 0.15s ease;
+    position: relative;
+  }
+  .feature-card:hover {
+    background: var(--surface);
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: var(--blue);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  .feature-card:hover::before {
+    transform: scaleX(1);
+  }
+  .feature-num {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--ink-3);
+    letter-spacing: 0.05em;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .feature-card h3 {
+    font-family: var(--sans);
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .feature-card p {
+    font-size: 0.88rem;
+    color: var(--ink-3);
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  /* Stats */
+  .stats-header {
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 2px solid var(--ink);
+    border-left: 2px solid var(--ink);
+  }
+  .stat-card {
+    padding: 40px 24px;
+    text-align: left;
+    background: var(--bg);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    transition: background 0.15s ease;
+    position: relative;
+  }
+  .stat-card:hover {
+    background: var(--surface);
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: var(--blue);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  .stat-card:hover::before {
+    transform: scaleX(1);
+  }
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  /* CTA */
+  .cta-section {
+    padding: 100px 0;
+    border-top: 2px solid var(--ink);
+  }
+  .cta-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 80px 60px;
+    border: 2px solid var(--ink);
+    position: relative;
+    background: var(--bg);
+  }
+  .cta-inner::before {
+    content: '';
+    position: absolute;
+    top: 8px; left: 8px; right: -8px; bottom: -8px;
+    background: var(--blue);
+    z-index: -1;
+  }
+  .cta-inner h2 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+  .cta-inner .lede {
+    color: var(--ink-2);
+    max-width: 500px;
+    margin-bottom: 32px;
+  }
+  .cta-inner .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--ink);
+  }
+  .cta-inner .btn-primary:hover {
+    background: var(--blue-dark);
+  }
+
+  /* Footer */
+  footer {
+    border-top: 2px solid var(--ink);
+    padding: 0;
+  }
+  .footer-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    min-height: 60px;
+  }
+  .footer-logo {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid var(--line);
+    padding: 0 24px;
+  }
+  .footer-links {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .footer-links a {
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    border-left: 1px solid var(--line);
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: all 0.15s ease;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .footer-links a:hover {
+    color: var(--blue);
+    background: var(--surface);
+  }
+  .footer-copy {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--ink-3);
+    border-left: 1px solid var(--line);
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .workflow-grid { grid-template-columns: repeat(3, 1fr); }
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 860px) {
+    .workflow-grid { grid-template-columns: repeat(2, 1fr); }
+    .features-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .workflow-header { grid-template-columns: 1fr; gap: 24px; }
+    .nav-links { display: none; }
+    .section { padding: 70px 0; }
+    .container { padding: 0 24px; }
+  }
+  @media (max-width: 540px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .workflow-grid { grid-template-columns: 1fr; }
+    .hero-actions { flex-direction: column; }
+    .cta-inner { padding: 48px 28px; }
+    .footer-inner { flex-direction: column; }
+    .footer-logo, .footer-links a, .footer-copy {
+      border-right: none;
+      border-left: none;
+      border-bottom: 1px solid var(--line);
+      justify-content: center;
+    }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <span class="logo-mark">
+        <svg width="12" height="12" viewBox="0 0 22 22" fill="none">
+          <path d="M3 17 L9 6 L13 13 L19 4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="19" cy="4" r="2.5" fill="#fff"/>
+        </svg>
+      </span>
+      AIMS
+    </a>
+    <div class="nav-links">
+      <a href="#workflow">Workflow</a>
+      <a href="#features">Features</a>
+      <a href="#stats">Impact</a>
+      <a href="#cta" class="active">Get Started</a>
+    </div>
+    <button class="nav-cta">Open Workspace</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-meta animate-fade-up">
+        <div class="hero-meta-item">Version<span>2.0</span></div>
+        <div class="hero-meta-item">Status<span>Active</span></div>
+        <div class="hero-meta-item">Build<span>2026.07</span></div>
+      </div>
+      <div class="hero-badge animate-fade-up delay-1">
+        <span class="dot"></span>
+        Creative Intelligence Platform
+      </div>
+      <h1 class="hero-title animate-fade-up delay-2">
+        AI accelerates<br/>the work.<br/>
+        <em>Humans provide<br/>the judgment.</em>
+      </h1>
+      <p class="hero-lede animate-fade-up delay-3">
+        AIMS turns client conversations and creative briefs into structured project intelligence,
+        strategic direction, proposals, quotes, and human-approved deliverables.
+      </p>
+      <div class="hero-actions animate-fade-up delay-4">
+        <a href="#" class="btn btn-primary">Open Workspace →</a>
+        <a href="#workflow" class="btn btn-ghost">See How It Works</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="workflow">
+  <div class="container">
+    <div class="workflow-header">
+      <div>
+        <div class="section-label animate-fade-up">Workflow</div>
+        <h2 class="display animate-fade-up delay-1" style="margin-bottom:10px;">10-stage creative<br/>intelligence pipeline</h2>
+      </div>
+      <div class="lede animate-fade-up delay-2" style="padding-top: 40px;">
+        From the first brief to final human approval, every step is tracked, attributed, and optimized.
+      </div>
+    </div>
+
+    <div class="workflow-grid">
+      <div class="workflow-step animate-fade-up delay-1">
+        <span class="workflow-num">01</span>
+        <h3>Creative Brief</h3>
+        <p>Capture client objectives, audience, direction and constraints with AI analysis.</p>
+      </div>
+      <div class="workflow-step animate-fade-up delay-2">
+        <span class="workflow-num">02</span>
+        <h3>Client Call</h3>
+        <p>Schedule and run the discovery conversation inside the platform.</p>
+      </div>
+      <div class="workflow-step animate-fade-up delay-3">
+        <span class="workflow-num">03</span>
+        <h3>Transcript</h3>
+        <p>Intelligent workspace that extracts meaning, decisions and action items.</p>
+      </div>
+      <div class="workflow-step animate-fade-up delay-4">
+        <span class="workflow-num">04</span>
+        <h3>AI Understanding</h3>
+        <p>Raw information becomes structured project intelligence.</p>
+      </div>
+      <div class="workflow-step animate-fade-up delay-5">
+        <span class="workflow-num">05</span>
+        <h3>Project Brief</h3>
+        <p>A refined brief combining every source into clear direction.</p>
+      </div>
+      <div class="workflow-step animate-fade-up delay-6">
+        <span class="workflow-num">06</span>
+        <h3>Workshop</h3>
+        <p>Humans and AI build the strategic direction together.</p>
+      </div>
+      <div class="workflow-step animate-fade-up delay-7">
+        <span class="workflow-num">07</span>
+        <h3>Synthesis</h3>
+        <p>All intelligence combined into clear, actionable direction.</p>
+      </div>
+      <div class="workflow-step animate-fade-up delay-8">
+        <span class="workflow-num">08</span>
+        <h3>Proposal</h3>
+        <p>AI-drafted, human-approved professional proposal.</p>
+      </div>
+      <div class="workflow-step animate-fade-up delay-9">
+        <span class="workflow-num">09</span>
+        <h3>Quote</h3>
+        <p>Professional quote, ready for client review.</p>
+      </div>
+      <div class="workflow-step animate-fade-up delay-10">
+        <span class="workflow-num">10</span>
+        <h3>Approval</h3>
+        <p>The final gate. AI assists, humans decide.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="features" style="background: var(--surface);">
+  <div class="container">
+    <div class="features-header">
+      <div class="section-label animate-fade-up">Capabilities</div>
+      <h2 class="display animate-fade-up delay-1" style="margin-bottom:10px;">Built for modern<br/>creative teams</h2>
+    </div>
+    <p class="lede animate-fade-up delay-2" style="margin-bottom: 0;">Every tool you need to run a creative agency, unified in one intelligent system.</p>
+
+    <div class="features-grid">
+      <div class="feature-card animate-fade-up delay-3">
+        <span class="feature-num">01</span>
+        <h3>Smart Briefs</h3>
+        <p>AI analyzes client briefs and extracts wants, risks, objectives, and missing information automatically.</p>
+      </div>
+      <div class="feature-card animate-fade-up delay-4">
+        <span class="feature-num">02</span>
+        <h3>In-App Meetings</h3>
+        <p>Embedded video meetings with live AI note-taking. Generate contact reports instantly after calls.</p>
+      </div>
+      <div class="feature-card animate-fade-up delay-5">
+        <span class="feature-num">03</span>
+        <h3>AI Understanding</h3>
+        <p>Transform raw conversations into structured intelligence with clear AI/human attribution.</p>
+      </div>
+      <div class="feature-card animate-fade-up delay-6">
+        <span class="feature-num">04</span>
+        <h3>Auto Proposals</h3>
+        <p>AI generates professional proposals from meeting content. Admin reviews and approves before sending.</p>
+      </div>
+      <div class="feature-card animate-fade-up delay-7">
+        <span class="feature-num">05</span>
+        <h3>Smart Quotes</h3>
+        <p>Automatic quote generation based on deliverables, timeline, and team availability.</p>
+      </div>
+      <div class="feature-card animate-fade-up delay-8">
+        <span class="feature-num">06</span>
+        <h3>Team & Talent</h3>
+        <p>Manage team roles, availability, and schedule projects based on real team capacity.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="stats">
+  <div class="container">
+    <div class="stats-header">
+      <div class="section-label animate-fade-up">Impact</div>
+      <h2 class="display animate-fade-up delay-1" style="margin-bottom:10px;">Designed for scale</h2>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card animate-fade-up delay-2">
+        <div class="stat-value">10</div>
+        <div class="stat-label">Workflow Stages</div>
+      </div>
+      <div class="stat-card animate-fade-up delay-3">
+        <div class="stat-value">5+</div>
+        <div class="stat-label">AI Agents</div>
+      </div>
+      <div class="stat-card animate-fade-up delay-4">
+        <div class="stat-value">80%</div>
+        <div class="stat-label">Time Saved</div>
+      </div>
+      <div class="stat-card animate-fade-up delay-5">
+        <div class="stat-value">24/7</div>
+        <div class="stat-label">AI Assistance</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section" id="cta">
+  <div class="container">
+    <div class="cta-inner animate-fade-up">
+      <h2>Ready to transform<br/>your agency?</h2>
+      <p class="lede">
+        Join the future of creative intelligence. AI handles the workflow, humans handle the creativity.
+      </p>
+      <a href="#" class="btn btn-primary" style="padding: 14px 32px;">Get Started →</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">AIMS</div>
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-copy">© 2026 AIMS</div>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.animationPlayState = 'running';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+  document.querySelectorAll('[class*="animate-"]').forEach(el => {
+    el.style.animationPlayState = 'paused';
+    observer.observe(el);
+  });
+
+  document.querySelectorAll('.hero [class*="animate-"]').forEach(el => {
+    el.style.animationPlayState = 'running';
+  });
+</script>
+
+</body>
+</html>

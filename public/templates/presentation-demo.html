@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Presentation - Brand Refresh</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fff;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+    .slide {
+      min-height: 100vh;
+      padding: 60px 40px;
+      page-break-after: always;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .slide:last-child { page-break-after: auto; }
+    .header {
+      border-bottom: 3px solid #1a1a1a;
+      padding-bottom: 30px;
+      margin-bottom: 40px;
+    }
+    .logo {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .logo em {
+      font-style: normal;
+      display: block;
+      font-size: 0.65rem;
+      color: #8e8e93;
+      letter-spacing: 0.2em;
+      margin-top: 4px;
+    }
+    .meta {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .meta-item { font-size: 0.85rem; }
+    .meta-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #8e8e93;
+      margin-bottom: 4px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .subtitle {
+      font-size: 1rem;
+      color: #8e8e93;
+      margin-bottom: 8px;
+    }
+    .slide-label {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #fff;
+      background: #1a1a1a;
+      padding: 4px 10px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #8e8e93;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .section-body {
+      font-size: 0.95rem;
+      color: #333;
+      line-height: 1.8;
+    }
+    .section-body p { margin-bottom: 16px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    ul li {
+      padding: 6px 0;
+      padding-left: 20px;
+      position: relative;
+      font-size: 0.9rem;
+    }
+    ul li::before {
+      content: "›";
+      position: absolute;
+      left: 0;
+      color: #1a1a1a;
+      font-weight: 700;
+    }
+    .team-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .team-tag {
+      padding: 6px 14px;
+      border: 1px solid #e5e5e5;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      color: #333;
+    }
+    .summary-box {
+      padding: 24px;
+      background: #fafafa;
+      border-left: 3px solid #1a1a1a;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: #333;
+    }
+    .action-item {
+      display: flex;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.88rem;
+    }
+    .action-who {
+      font-weight: 600;
+      min-width: 120px;
+      color: #1a1a1a;
+    }
+    .action-task { flex: 1; color: #333; }
+    .action-due {
+      color: #8e8e93;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th {
+      text-align: left;
+      padding: 12px 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #8e8e93;
+      border-bottom: 2px solid #1a1a1a;
+    }
+    td {
+      padding: 16px 0;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    td:last-child, th:last-child { text-align: right; }
+    td:nth-child(2) { color: #8e8e93; font-size: 0.85rem; }
+    .totals {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      width: 300px;
+      padding: 8px 0;
+      font-size: 0.9rem;
+    }
+    .total-row.grand {
+      border-top: 2px solid #1a1a1a;
+      margin-top: 8px;
+      padding-top: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .investment-box {
+      background: #fafafa;
+      border: 2px solid #1a1a1a;
+      padding: 30px;
+      margin-top: 20px;
+    }
+    .investment-amount {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .investment-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #8e8e93;
+    }
+    .terms {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .cta {
+      margin-top: 50px;
+      padding: 30px;
+      background: #1a1a1a;
+      color: #fff;
+      text-align: center;
+    }
+    .cta-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .cta-text {
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+    .footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e5e5;
+      font-size: 0.75rem;
+      color: #8e8e93;
+      text-align: center;
+    }
+    @media print {
+      body { padding: 0; }
+      .slide { padding: 40px 30px; }
+      .cta { background: #f5f5f5 !important; color: #1a1a1a !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <div class="header">
+      <div class="logo">
+        Synthos
+        <em>Creative Intelligence</em>
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <div class="meta-label">Client</div>
+          <div>Joshua</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Company</div>
+          <div>Acme Inc</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Project</div>
+          <div>Brand Refresh</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Date</div>
+          <div>July 21, 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <span class="slide-label">Project Brief</span>
+    <h1>Brand Refresh</h1>
+    <p class="subtitle">Strategic foundation for the creative project</p>
+
+    <div class="section-body">
+      <div class="grid">
+        <div>
+          <div class="section-title">Business Objective</div>
+          <p style="margin-bottom: 20px;">Create a modern, high-performance personal portfolio website that showcases software development projects, technical skills, certifications, and personal brand.</p>
+          <div class="section-title">Audience</div>
+          <p style="margin-bottom: 20px;">Recruiters, hiring managers, freelance clients, and potential collaborators in the tech industry.</p>
+          <div class="section-title">Brand Context</div>
+          <p>Joshua is a creative technologist with a background in music and video production, now focused on AI and software engineering.</p>
+        </div>
+        <div>
+          <div class="section-title">Creative Direction</div>
+          <p style="margin-bottom: 20px;">Minimalist, high-contrast design with subtle motion. Clean typography, generous whitespace, and a focus on content hierarchy. Dark mode primary with accent highlights.</p>
+          <div class="section-title">Timeline</div>
+          <p style="margin-bottom: 20px;">8 Weeks</p>
+          <div class="section-title">Budget</div>
+          <p>$25,000 - $40,000</p>
+        </div>
+      </div>
+      <div style="margin-top: 20px;">
+        <div class="section-title">Deliverables</div>
+        <ul>
+          <li>Portfolio website with project showcase</li>
+          <li>About page with bio and skills</li>
+          <li>Contact form and integration</li>
+          <li>Mobile-responsive design</li>
+          <li>Performance optimization</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <div class="header">
+      <div class="logo">
+        Synthos
+        <em>Creative Intelligence</em>
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <div class="meta-label">Client</div>
+          <div>Joshua</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Meeting Date</div>
+          <div>July 21, 2026</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Project</div>
+          <div>Brand Refresh</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Participants</div>
+          <div>Joshua, Producer, Strategist</div>
+        </div>
+      </div>
+    </div>
+
+    <span class="slide-label">Contact Report</span>
+    <h1>Meeting Summary</h1>
+    <p class="subtitle">Key discussion points and outcomes</p>
+
+    <div class="section-body">
+      <div class="section-title">Summary</div>
+      <div class="summary-box" style="margin-bottom: 30px;">
+        The client discussed their vision for a portfolio website that reflects their transition from music/video production into AI and software engineering. They want a design that feels contemporary but timeless, with smooth interactions and clear content hierarchy. The team aligned on a minimalist dark-theme approach with subtle motion design.
+      </div>
+
+      <div class="grid">
+        <div>
+          <div class="section-title">Key Points</div>
+          <ul>
+            <li>Client wants a portfolio that tells a story, not just lists work</li>
+            <li>Emphasis on performance and fast load times</li>
+            <li>Interest in subtle animations and micro-interactions</li>
+            <li>Mobile experience is critical — client views site primarily on phone</li>
+            <li>Budget flexible within $25k-$40k range</li>
+          </ul>
+        </div>
+        <div>
+          <div class="section-title">Decisions</div>
+          <ul>
+            <li>Proceed with dark-mode minimalist design</li>
+            <li>Use Next.js and Tailwind for the tech stack</li>
+            <li>Timeline: 8 weeks with 2-week buffer</li>
+            <li>Weekly Friday check-ins established</li>
+            <li>First draft due in 3 weeks</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <div class="section-title">Action Items</div>
+        <div class="action-item">
+          <span class="action-who">Strategist</span>
+          <span class="action-task">Draft sitemap and user flow</span>
+          <span class="action-due">July 24</span>
+        </div>
+        <div class="action-item">
+          <span class="action-who">Creative</span>
+          <span class="action-task">Create 3 moodboard directions</span>
+          <span class="action-due">July 28</span>
+        </div>
+        <div class="action-item">
+          <span class="action-who">Producer</span>
+          <span class="action-task">Set up repo, CI/CD, and staging environment</span>
+          <span class="action-due">July 23</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <div class="section-title">Next Steps</div>
+        <ul>
+          <li>Share initial moodboards for client feedback</li>
+          <li>Schedule follow-up review for end of week</li>
+          <li>Begin technical architecture document</li>
+          <li>Send contract and onboarding docs</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <div class="header">
+      <div class="logo">
+        Synthos
+        <em>Creative Intelligence</em>
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <div class="meta-label">Client</div>
+          <div>Joshua</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Project</div>
+          <div>Brand Refresh</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Status</div>
+          <div>Pending Review</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Date</div>
+          <div>July 21, 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <span class="slide-label">Proposal</span>
+    <h1>Brand Refresh Proposal</h1>
+    <p class="subtitle">A comprehensive creative project proposal</p>
+
+    <div class="section-body">
+      <div class="section-title">Overview</div>
+      <p style="margin-bottom: 30px;">We will design and build a modern portfolio website that showcases your transition from media production into AI and software engineering. The site will feel contemporary, perform flawlessly, and tell your story with clarity and confidence.</p>
+
+      <div class="grid">
+        <div>
+          <div class="section-title">Problem</div>
+          <p style="margin-bottom: 20px;">Your current online presence doesn't reflect your current expertise or the breadth of your work. Recruiters and clients need to immediately understand your capabilities and see proof of your skills.</p>
+          <div class="section-title">Solution</div>
+          <p>A high-performance portfolio with a curated project narrative, skill taxonomy, and streamlined contact flow.</p>
+        </div>
+        <div>
+          <div class="section-title">Scope</div>
+          <ul>
+            <li>Brand Strategy</li>
+            <li>UX/UI Design</li>
+            <li>Frontend Development</li>
+            <li>CMS Integration</li>
+            <li>Performance Optimization</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <div class="section-title">Deliverables</div>
+        <ul>
+          <li>Responsive portfolio website (desktop, tablet, mobile)</li>
+          <li>Project showcase with filtering and detail views</li>
+          <li>About page with bio, skills, and experience timeline</li>
+          <li>Contact form with email integration</li>
+          <li>Design system and component documentation</li>
+        </ul>
+      </div>
+
+      <div class="grid" style="margin-top: 30px;">
+        <div>
+          <div class="section-title">Team</div>
+          <div class="team-list">
+            <span class="team-tag">Strategist</span>
+            <span class="team-tag">Creative Director</span>
+            <span class="team-tag">Producer</span>
+            <span class="team-tag">Developer</span>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Timeline</div>
+          <p>8 Weeks</p>
+        </div>
+      </div>
+
+      <div class="investment-box" style="margin-top: 30px;">
+        <div class="investment-label">Investment</div>
+        <div class="investment-amount">$32,000</div>
+        <div class="terms">40% start, 40% midpoint, 20% on delivery</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <div class="header">
+      <div class="logo">
+        Synthos
+        <em>Creative Intelligence</em>
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <div class="meta-label">Client</div>
+          <div>Joshua</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Project</div>
+          <div>Brand Refresh</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Date</div>
+          <div>July 21, 2026</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Valid Until</div>
+          <div>August 20, 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <span class="slide-label">Quote</span>
+    <h1>Quote</h1>
+    <p class="subtitle">Detailed breakdown of services and investment</p>
+
+    <div class="section-body">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40%">Service</th>
+            <th style="width: 30%">Description</th>
+            <th style="width: 10%">Qty</th>
+            <th style="width: 20%">Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Strategy & Discovery</strong></td>
+            <td>Research, sitemap, user flow, brand positioning</td>
+            <td>1</td>
+            <td>$6,000</td>
+          </tr>
+          <tr>
+            <td><strong>UX/UI Design</strong></td>
+            <td>Wireframes, visual design, responsive mockups</td>
+            <td>1</td>
+            <td>$10,000</td>
+          </tr>
+          <tr>
+            <td><strong>Frontend Development</strong></td>
+            <td>Next.js, Tailwind, animations, CMS setup</td>
+            <td>1</td>
+            <td>$12,000</td>
+          </tr>
+          <tr>
+            <td><strong>QA & Launch</strong></td>
+            <td>Testing, optimization, deployment, handoff</td>
+            <td>1</td>
+            <td>$4,000</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <span>$32,000</span>
+        </div>
+        <div class="total-row">
+          <span>Discount</span>
+          <span>$0</span>
+        </div>
+        <div class="total-row">
+          <span>Tax</span>
+          <span>$0</span>
+        </div>
+        <div class="total-row grand">
+          <span>Total</span>
+          <span>$32,000</span>
+        </div>
+      </div>
+
+      <div class="terms-box" style="margin-top: 40px; padding: 24px; background: #fafafa; border: 1px solid #e5e5e5;">
+        <div class="terms-title" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #8e8e93; margin-bottom: 10px;">Payment Terms</div>
+        <div class="terms-text" style="font-size: 0.9rem; color: #555;">40% due at project start, 40% at midpoint review, 20% on final delivery.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <div class="cta" style="margin-top: 0; min-height: 60vh; display: flex; flex-direction: column; justify-content: center;">
+      <div class="cta-title" style="font-size: 2rem; margin-bottom: 16px;">Ready to move forward?</div>
+      <div class="cta-text" style="font-size: 1rem; max-width: 600px; margin: 0 auto;">
+        Thank you for considering this proposal. We look forward to the opportunity to work together and bring your brand refresh to life.
+      </div>
+      <div style="margin-top: 40px; font-size: 0.85rem; color: #999;">
+        Synthos Creative Intelligence · synthos.studio
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -44,7 +44,7 @@ export async function POST(
         OR: [{ id: projectId }, { roomName: projectId }],
       },
       include: {
-        proposals: { orderBy: { createdAt: "desc" } },
+        proposal: true,
       },
     });
 
@@ -54,10 +54,9 @@ export async function POST(
 
     const contactReport =
       bodyContactReport ||
-      project.contactReport ||
-      project.proposals.find((p) => p.type === "CONTACT_REPORT")?.content ||
+      project.contactReportText ||
+      project.proposal?.content ||
       bodyDiscoveryNotes ||
-      project.discoveryNotes ||
       "Executive client discovery outlines & objectives captured.";
 
     const prompt = `Act as a Senior Agency Lead & Technical Architect.
@@ -134,11 +133,17 @@ Return ONLY polished proposal HTML snippet.`;
 </section>`;
     }
 
-    // Save to Meeting record as INTERNAL_PRODUCTION
-    await prisma.meeting.create({
-      data: {
+    // Save to ClientCall record
+    await prisma.clientCall.upsert({
+      where: { projectId: project.id },
+      create: {
         projectId: project.id,
-        type: "INTERNAL_PRODUCTION",
+        date: new Date().toISOString(),
+        duration: "30m",
+        summary: (internalTranscript || "Internal workshop debrief.").slice(0, 200),
+        transcript: internalTranscript || "Internal workshop debrief.",
+      },
+      update: {
         transcript: internalTranscript || "Internal workshop debrief.",
       },
     });

@@ -1,0 +1,35 @@
+export const dynamic = 'force-dynamic'
+
+import Link from "next/link"
+import { getProjects } from "@/lib/data-server"
+import { PageHead, PageWrap } from "@/components/app/Page"
+import { Confidence, Empty } from "@/components/app/ui"
+
+export default async function BriefsPage() {
+  const projects = await getProjects()
+  return (
+    <PageWrap>
+      <PageHead eyebrow="Intelligence" title="Briefs" desc="Every client brief, with the AI's read on what's clear, risky, and missing." />
+      <div className="feat-grid">
+        {projects.map((p) => {
+          const b = p.brief
+          if (!b) return null
+          return (
+            <Link key={p.id} href={`/dashboard/projects/${p.id}`} className="feat-card">
+              <div className="row between" style={{ marginBottom: 10 }}>
+                <span className="feat-tag">{p.type}</span>
+                <Confidence value={b.aiConfidence || 0} />
+              </div>
+              <h3>{b.title || p.name}</h3>
+              <p className="tiny" style={{ marginTop: 6 }}>{p.client} · {b.businessObjective || ""}</p>
+              <div className="row gap-2 wrap" style={{ marginTop: 14 }}>
+                {Array.isArray(b.aiRisks) && (b.aiRisks as string[]).length > 0 && <span className="chip" style={{ color: "var(--rejected)", background: "var(--rejected-soft)" }}>{(b.aiRisks as string[]).length} risks</span>}
+                {Array.isArray(b.aiMissing) && (b.aiMissing as string[]).length > 0 && <span className="chip" style={{ color: "var(--signal-ink)", background: "var(--signal-soft)" }}>{(b.aiMissing as string[]).length} missing</span>}
+              </div>
+            </Link>
+          )
+        })}
+      </div>
+    </PageWrap>
+  )
+}

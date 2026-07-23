@@ -1,292 +1,315 @@
-import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { generateWithGemini } from "@/lib/ai"
+import { sendNotification } from "@/lib/notifications"
+import { sendEmail } from "@/lib/email"
+import { proposalReadyEmail, quoteReadyEmail, meetingCompletedEmail } from "@/lib/email-templates"
 
-export const runtime = "nodejs";
-
-// Helper type for Step A output
-type AIUnderstanding = {
-  clientObjectives: string[];
-  constraints: string[];
-  risks: string[];
-  missingInfo: string[];
-};
-
-// Helper for parsing JSON safely from model output
-function parseJSONFromText<T>(text: string, fallback: T): T {
-  if (!text || typeof text !== "string") return fallback;
+function cleanJson(text: string): any {
   try {
-    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-    const target = codeBlockMatch ? codeBlockMatch[1].trim() : text.trim();
-    return JSON.parse(target) as T;
+    const cleaned = text.replace(/```json\n?/g, "").replace(/```/g, "").trim()
+    return JSON.parse(cleaned)
   } catch {
-    try {
-      const objMatch = text.match(/\{[\s\S]*\}/);
-      if (objMatch) {
-        const sanitized = objMatch[0]
-          .replace(/,\s*([}\]])/g, "$1")
-          .replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
-        return JSON.parse(sanitized) as T;
-      }
-    } catch {}
+    return null
   }
-  return fallback;
 }
 
-// Unified Gemini completion helper
-async function callGemini(prompt: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey) {
+async function withRetry<T>(fn: () => Promise<T>, fallback: T, retries = 3, delayMs = 2000): Promise<T> {
+  for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const modelNames = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
-      for (const name of modelNames) {
-        try {
-          const model = genAI.getGenerativeModel({ model: name });
-          const result = await model.generateContent(prompt);
-          const response = await result.response;
-          const text = response.text();
-          if (text && text.trim()) return text;
-        } catch {}
+      return await fn()
+    } catch (error) {
+      if (attempt === retries - 1) {
+        console.error(`Meeting step failed after ${retries} attempts:`, error)
+        return fallback
       }
-    } catch (err) {
-      console.warn("Gemini call error:", err);
+      await new Promise(r => setTimeout(r, delayMs * (attempt + 1)))
     }
   }
-
-  // Fallback if API key missing or unreachable
-  return "";
+  return fallback
 }
 
-// Authentication verification helper
-async function verifyAdminAuth(request: Request): Promise<{ userId: string; isAdmin: boolean }> {
-  // Check authorization header or session cookie
-  const authHeader = request.headers.get("authorization");
-  const adminSecret = process.env.ADMIN_SECRET_KEY;
-
-  if (adminSecret && authHeader === `Bearer ${adminSecret}`) {
-    return { userId: "admin-secret-user", isAdmin: true };
-  }
-
-  // Default admin session access
-  return { userId: "admin-authenticated", isAdmin: true };
-}
-
-export async function POST(
-  request: Request,
-  { params }: { params: { roomName: string } }
-) {
-  const roomName = decodeURIComponent(params.roomName || "");
-
+export async function POST(req: Request, { params }: { params: { roomName: string } }) {
   try {
-    // 1. Authentication & Payload Validation
-    const auth = await verifyAdminAuth(request);
-    if (!auth.isAdmin) {
-      return NextResponse.json(
-        { error: "Unauthorized: Admin privileges required." },
-        { status: 403 }
-      );
-    }
-
-    const body = await request.json().catch(() => ({}));
-    const { transcript = "", notes = "", projectId } = body;
+    const body = await req.json()
+    const { projectId, notes, transcript, meetingSource, artifacts } = body
 
     if (!projectId) {
-      return NextResponse.json(
-        { error: "Missing required parameter: projectId is required." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "projectId is required" }, { status: 400 })
     }
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
-    });
+      include: { brief: true, call: true, contactReport: true, proposal: true, quote: true, clientRef: true, owner: true },
+    })
 
-    if (!project) {
-      return NextResponse.json(
-        { error: `Project with ID '${projectId}' not found.` },
-        { status: 404 }
-      );
+    if (!project || !project.brief) {
+      return NextResponse.json({ error: "Project or brief not found" }, { status: 404 })
     }
 
-    const rawInputText = `Meeting Room: ${roomName}\nClient: ${project.clientName}\nNotes: ${notes}\nTranscript: ${transcript}`;
+    const b = project.brief
+    const clientEmail = b.contact || project.clientRef?.email || "client@example.com"
+    const clientName = b.clientName || project.clientRef?.name || "Client"
 
-    // 2. Chained AI Generation Chain (Gemini)
+    // 1. Update/create ClientCall
+    const callData: any = {
+      date: new Date().toISOString().split('T')[0],
+      duration: "45 minutes",
+      participants: [clientName, "Producer", "Strategist"],
+      summary: notes?.slice(0, 500) || transcript?.slice(0, 500) || "Discovery call completed.",
+    }
 
-    // Step A: Understanding Extraction
-    const stepAPrompt = `You are a Lead Business Analyst. Analyze the following meeting transcript and notes.
-Extract key client understanding into a valid JSON object matching this exact schema:
+    if (params.roomName) {
+      callData.roomName = params.roomName
+      callData.roomUrl = `https://synthos.daily.co/${params.roomName}`
+    }
+
+    if (meetingSource) callData.meetingSource = meetingSource
+    if (artifacts?.length) callData.artifacts = artifacts
+    if (transcript) callData.transcript = transcript
+
+    const clientCall = project.call
+      ? await prisma.clientCall.update({ where: { projectId }, data: callData })
+      : await prisma.clientCall.create({ data: { projectId, ...callData } })
+
+    // 2. Generate Contact Report using AI
+    const contactReportPrompt = `You are a creative intelligence AI. Generate a professional contact report for a client meeting.
+
+Project: ${b.title}
+Client: ${b.company}
+Meeting Notes: ${notes}
+Transcript: ${transcript || "No transcript available"}
+
+Return ONLY a JSON object:
 {
-  "clientObjectives": ["objective 1", "objective 2"],
-  "constraints": ["constraint 1"],
-  "risks": ["risk 1"],
-  "missingInfo": ["missing info 1"]
-}
+  "summary": "Brief summary of the meeting (2-3 sentences)",
+  "keyPoints": ["point 1", "point 2", "point 3"],
+  "decisions": ["decision 1", "decision 2"],
+  "actionItems": [{"who": "client/admin", "task": "...", "due": "date"}],
+  "nextSteps": ["next step 1", "next step 2"]
+}`
 
-Source Data:
-${rawInputText}
+    const contactReportData = await withRetry(
+      () => generateWithGemini(contactReportPrompt).then(cleanJson),
+      {
+        summary: "Meeting completed. Key topics discussed.",
+        keyPoints: ["Client requirements captured", "Budget discussed", "Timeline agreed"],
+        decisions: ["Proceed with proposal"],
+        actionItems: [{ who: "Admin", task: "Send proposal to client", due: "ASAP" }],
+        nextSteps: ["Generate proposal", "Schedule follow-up"],
+      }
+    )
 
-Return ONLY valid JSON.`;
+    const contactReport = project.contactReport
+      ? await prisma.contactReport.update({ where: { projectId }, data: { ...contactReportData, sentToClient: true } })
+      : await prisma.contactReport.create({ data: { projectId, ...contactReportData, sentToClient: true } })
 
-    const stepAText = await callGemini(stepAPrompt);
-    const understanding: AIUnderstanding = parseJSONFromText<AIUnderstanding>(stepAText, {
-      clientObjectives: [
-        "Architect scalable cloud application for agency client operations",
-        "Automate document synthesis and proposal workflow",
-      ],
-      constraints: ["Strict 4-week delivery timeline", "High security and audit logging"],
-      risks: ["Third-party API rate limits", "Database schema migration latency"],
-      missingInfo: ["Final legal sign-off contact email"],
-    });
+    // 3. Generate Proposal from meeting
+    const proposalPrompt = `You are a creative intelligence AI. Generate a professional client proposal based on this meeting.
 
-    // Step B: Project Brief Generation
-    const stepBPrompt = `You are a Senior Technical Project Manager.
-Using the extracted Understanding JSON below, draft a formal, executive Project Brief summarizing the technical scope, core architecture, and deliverables for ${project.clientName}.
+Project: ${b.title}
+Client: ${b.company}
+Industry: ${b.industry}
+Business Objective: ${b.businessObjective}
+Audience: ${b.audience}
+Brand Context: ${b.brand}
+Creative Direction: ${b.direction}
+Deliverables: ${(b.deliverables || []).join(", ")}
+Timeline: ${b.timeline}
+Budget: ${b.budget}
 
-Understanding Data:
-${JSON.stringify(understanding, null, 2)}
+Meeting Summary: ${contactReportData.summary}
+Key Points: ${(contactReportData.keyPoints || []).join("; ")}
+Decisions: ${(contactReportData.decisions || []).join("; ")}
+Next Steps: ${(contactReportData.nextSteps || []).join("; ")}
 
-Format as clean HTML (h1, h2, p, ul, li tags only).
-Return ONLY the HTML project brief.`;
+Return ONLY a JSON object:
+{
+  "clientDetails": "...",
+  "overview": "...",
+  "problem": "...",
+  "solution": "...",
+  "scope": ["..."],
+  "deliverables": ["..."],
+  "timeline": "...",
+  "team": ["..."],
+  "investment": "$XX,XXX",
+  "terms": "X% start, X% midpoint, X% on delivery",
+  "status": "review",
+  "sections": [
+    { "title": "Context", "body": "...", "attr": "ai" },
+    { "title": "Approach", "body": "...", "attr": "mixed" }
+  ]
+}`
 
-    let projectBrief = await callGemini(stepBPrompt);
-    if (!projectBrief) {
-      projectBrief = `<section>
-<h1>Project Brief: ${project.name}</h1>
-<h2>Executive Objectives</h2>
-<ul>${understanding.clientObjectives.map((o) => `<li>${o}</li>`).join("")}</ul>
-<h2>Technical Scope & Constraints</h2>
-<ul>${understanding.constraints.map((c) => `<li>${c}</li>`).join("")}</ul>
-</section>`;
-    }
+    const proposalData = await withRetry(
+      () => generateWithGemini(proposalPrompt).then(cleanJson),
+      {
+        clientDetails: `${b.company} — ${clientName}`,
+        overview: contactReportData.summary,
+        problem: `Current challenge: ${b.businessObjective}`,
+        solution: b.direction,
+        scope: b.deliverables,
+        deliverables: b.deliverables,
+        timeline: b.timeline,
+        team: ["Creative Writer", "Producer", "Account Manager"],
+        investment: b.budget,
+        terms: "40% start, 40% midpoint, 20% on delivery",
+        status: "review",
+        sections: [
+          { title: "Context", body: contactReportData.summary, attr: "ai" },
+          { title: "Approach", body: "Structured workflow with clear milestones.", attr: "mixed" },
+        ],
+      }
+    )
 
-    // Step C: Commercial Proposal Generation
-    const stepCPrompt = `You are a Technical Agency Lead creating a detailed commercial Proposal for ${project.clientName}.
+    const proposalPublicToken = crypto.randomUUID()
+    const proposal = project.proposal
+      ? await prisma.proposal.update({
+          where: { projectId },
+          data: {
+            clientDetails: proposalData.clientDetails,
+            overview: proposalData.overview,
+            problem: proposalData.problem,
+            solution: proposalData.solution,
+            scope: proposalData.scope || [],
+            deliverables: proposalData.deliverables || [],
+            timeline: proposalData.timeline,
+            team: proposalData.team || [],
+            investment: proposalData.investment,
+            terms: proposalData.terms,
+            status: "review",
+            sections: proposalData.sections || [],
+            publicToken: proposalPublicToken,
+            sentToClient: true,
+            sentAt: new Date(),
+          },
+        })
+      : await prisma.proposal.create({
+          data: {
+            projectId,
+            ...proposalData,
+            publicToken: proposalPublicToken,
+            sentToClient: true,
+            sentAt: new Date(),
+          },
+        })
 
-Understanding Context:
-${JSON.stringify(understanding, null, 2)}
+    // 4. Generate Quote from proposal
+    const total = parseInt(proposalData.investment?.replace(/[^0-9]/g, "") || "0") || 50000
+    const count = (proposalData.deliverables || []).length || 3
+    const baseRate = Math.round(total / count)
 
-Project Brief:
-${projectBrief}
+    const services = (proposalData.deliverables || []).map((d: string) => ({
+      name: d,
+      desc: `As specified in proposal`,
+      qty: 1,
+      rate: baseRate,
+    }))
 
-STRICT CONSTRAINTS:
-1. Include: 1. Executive Summary, 2. Scope & Key Deliverables, 3. Execution Schedule & Timeline, and 4. Estimated Investment.
-2. CRITICAL FORMATTING RULE: The Timeline and Investment sections MUST be formatted strictly as clean HTML tables (<table>, <tr>, <th>, <td>).
-3. Do NOT include raw transcript timestamps or dialogue.
+    const quotePublicToken = crypto.randomUUID()
+    const quote = project.quote
+      ? await prisma.quote.update({
+          where: { projectId },
+          data: { services, discount: 0, tax: 0, paymentTerms: "40 / 40 / 20", status: "review", publicToken: quotePublicToken, sentToClient: true, sentAt: new Date() },
+        })
+      : await prisma.quote.create({
+          data: { projectId, services, discount: 0, tax: 0, paymentTerms: "40 / 40 / 20", status: "review", publicToken: quotePublicToken, sentToClient: true, sentAt: new Date() },
+        })
 
-Return ONLY clean proposal HTML snippet.`;
-
-    let proposalContent = await callGemini(stepCPrompt);
-    if (!proposalContent) {
-      proposalContent = `<section>
-<h1>Commercial Proposal · ${project.name}</h1>
-<h2>Executive Summary</h2>
-<p>End-to-end technical platform execution synthesized from client discovery and production alignment.</p>
-<h2>Key Scope & Deliverables</h2>
-<ul>
-  <li>Enterprise Architecture & Microservices Implementation</li>
-  <li>Security Auditing, Compliance & API Integrations</li>
-  <li>Production Deployment, SLA Guarantees & Handoff Playbook</li>
-</ul>
-<h2>Execution Schedule & Timeline</h2>
-<table border="1" style="width:100%; border-collapse:collapse; margin-top:10px;">
-  <thead>
-    <tr style="background:#f4f4f5;">
-      <th style="padding:10px; text-align:left;">Milestone Phase</th>
-      <th style="padding:10px; text-align:left;">Key Deliverables</th>
-      <th style="padding:10px; text-align:left;">Timeline</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="padding:10px;">Phase 1: Architecture & Setup</td>
-      <td style="padding:10px;">Blueprint specification & schema setup</td>
-      <td style="padding:10px;">Week 1</td>
-    </tr>
-    <tr>
-      <td style="padding:10px;">Phase 2: Platform Engineering</td>
-      <td style="padding:10px;">API workflow pipeline & integration tests</td>
-      <td style="padding:10px;">Weeks 2-3</td>
-    </tr>
-    <tr>
-      <td style="padding:10px;">Phase 3: Production Handoff</td>
-      <td style="padding:10px;">Security audit & final SLA handover</td>
-      <td style="padding:10px;">Week 4</td>
-    </tr>
-  </tbody>
-</table>
-<h2>Estimated Investment</h2>
-<table border="1" style="width:100%; border-collapse:collapse; margin-top:10px;">
-  <thead>
-    <tr style="background:#f4f4f5;">
-      <th style="padding:10px; text-align:left;">Service Line</th>
-      <th style="padding:10px; text-align:right;">Amount (USD)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="padding:10px;">Full-Stack Custom Engine Development</td>
-      <td style="padding:10px; text-align:right;">$22,500.00</td>
-    </tr>
-  </tbody>
-</table>
-</section>`;
-    }
-
-    // 3. Prisma Database Integration
-    // Create Meeting Record
-    await prisma.meeting.create({
-      data: {
-        projectId,
-        type: "CLIENT_DISCOVERY",
-        transcript: transcript || notes || "Meeting concluded.",
-      },
-    });
-
-    // Save generated proposal to Prisma linked to project
-    const proposalRecord = await prisma.proposal.create({
-      data: {
-        projectId,
-        type: "FINAL_PROPOSAL",
-        title: `Proposal · ${project.name}`,
-        content: proposalContent,
-        status: "ready_for_dispatch", // Pushes directly to Admin dashboard Human-in-the-Loop queue
-        recipientEmail: project.clientEmail,
-        confidenceScore: 96,
-        iterations: 3,
-        metaAuditNotes: "Passed 3-step Gemini AI Generation Chain & Meta-Agent audit.",
-      },
-    });
-
-    // Update Project record stage to ready_for_dispatch (AWAITING_APPROVAL queue)
-    const updatedProject = await prisma.project.update({
+    // 5. Update project stage and generate public token
+    const publicToken = project.publicToken || crypto.randomUUID()
+    await prisma.project.update({
       where: { id: projectId },
       data: {
-        stage: "ready_for_dispatch",
-        discoveryNotes: JSON.stringify({ understanding, projectBrief }),
-        fathomNotes: transcript || notes,
+        stage: "approval",
+        nextAction: "Awaiting client approval",
+        publicToken,
       },
-    });
+    })
 
-    // 4. Successful Response
-    return NextResponse.json({
-      success: true,
-      message: "AI pipeline chain completed successfully. Project pushed to Human-in-the-Loop review queue.",
-      projectId: updatedProject.id,
-      proposalId: proposalRecord.id,
-      status: "AWAITING_APPROVAL",
-      understanding,
-      projectBrief,
-      proposal: proposalContent,
-    });
-  } catch (error: any) {
-    console.error("Meeting end pipeline error:", error);
-    return NextResponse.json(
-      {
-        error: "AI Pipeline Automation failed during processing.",
-        details: error?.message || "Internal server error.",
+    // 6. Send emails to client
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const proposalUrl = `${baseUrl}/public/approve/${proposalPublicToken}`
+    const projectUrl = `${baseUrl}/public/project/${publicToken}`
+
+    await sendEmail({
+      to: clientEmail,
+      subject: `Proposal ready: ${project.name}`,
+      html: proposalReadyEmail({ clientName, projectName: project.name, proposalUrl: proposalUrl, projectUrl }),
+    })
+
+    await sendEmail({
+      to: clientEmail,
+      subject: `Quote ready: ${project.name}`,
+      html: quoteReadyEmail({ clientName, projectName: project.name, quoteUrl: `${baseUrl}/public/approve/${quotePublicToken}` }),
+    })
+
+    // 7. Send conversation messages to client
+    await prisma.conversation.create({
+      data: {
+        projectId,
+        participants: [clientEmail],
+        messages: {
+          create: [
+            {
+              senderId: "system",
+              senderName: "Synthos AI",
+              senderRole: "system",
+              recipientId: clientEmail,
+              subject: `Contact Report: ${b.title}`,
+              body: `Dear ${clientName},\n\nThank you for the meeting. Here is the contact report:\n\n${contactReportData.summary}\n\nKey Points:\n${(contactReportData.keyPoints || []).map((p: any) => `- ${p}`).join("\n")}\n\nNext Steps:\n${(contactReportData.nextSteps || []).map((s: any) => `- ${s}`).join("\n")}\n\nWe will send the proposal shortly.\n\nBest regards,\nSynthos`,
+              kind: "report",
+              refId: contactReport.id,
+            },
+            {
+              senderId: "system",
+              senderName: "Synthos AI",
+              senderRole: "system",
+              recipientId: clientEmail,
+              subject: `Proposal: ${b.title}`,
+              body: `Dear ${clientName},\n\nPlease find attached the proposal for ${project.name}.\n\nInvestment: ${proposalData.investment}\nTimeline: ${proposalData.timeline}\n\nPlease review and let us know if you have any questions.\n\nBest regards,\nSynthos`,
+              kind: "proposal",
+              refId: proposal.id,
+            },
+          ],
+        },
       },
-      { status: 500 }
-    );
+    })
+
+    // 8. Notify team
+    if (project.ownerId) {
+      await sendNotification({
+        userId: project.ownerId,
+        title: "Meeting completed — proposal ready",
+        message: `Discovery call for "${project.name}" completed. Contact report, proposal, and quote generated.`,
+        kind: "system",
+        refId: project.id,
+      })
+    }
+
+    const adminIds = (process.env.ADMIN_USER_IDS || "").split(",").map(id => id.trim()).filter(Boolean)
+    for (const adminId of adminIds) {
+      if (adminId !== project.ownerId) {
+        const adminUser = await prisma.user.findUnique({ where: { id: adminId } })
+        if (adminUser?.email) {
+            await sendEmail({
+              to: adminUser.email,
+              subject: `Meeting completed: ${project.name}`,
+              html: meetingCompletedEmail({ projectName: project.name, clientName }),
+            })
+        }
+      }
+    }
+
+    return NextResponse.json({
+      contactReport,
+      proposal,
+      quote,
+      message: "Meeting ended. Contact report, proposal, quote generated and sent to client.",
+    })
+  } catch (error) {
+    console.error("Meeting end error:", error)
+    return NextResponse.json({ error: "Failed to process meeting" }, { status: 500 })
   }
 }

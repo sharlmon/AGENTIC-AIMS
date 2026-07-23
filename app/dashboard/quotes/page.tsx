@@ -1,0 +1,38 @@
+export const dynamic = 'force-dynamic'
+
+import Link from "next/link"
+import { getProjects } from "@/lib/data-server"
+import { PageHead, PageWrap } from "@/components/app/Page"
+import { StatusPill, Empty } from "@/components/app/ui"
+
+export default async function QuotesPage() {
+  const projects = await getProjects()
+  const withQuotes = projects.filter((p) => p.quote && Array.isArray(p.quote.services) && p.quote.services.length > 0)
+  return (
+    <PageWrap>
+      <PageHead eyebrow="Delivery" title="Quotes" desc="Professional quotes, prepared by the system and ready for human review before they reach the client." />
+      {withQuotes.length === 0 ? (
+        <Empty title="No quotes yet" hint="Quotes are prepared after a proposal in a project workspace." />
+      ) : (
+        <div className="feat-list">
+          {withQuotes.map((p: any) => {
+            const services = p.quote.services as any[]
+            const subtotal = services.reduce((a, s) => a + s.qty * s.rate, 0)
+            const total = subtotal * (1 - p.quote.discount / 100)
+            return (
+               <Link key={p.id} href={`/dashboard/projects/${p.id}`} className="feat-row feat-row--4col">
+                <div className="stack gap-1">
+                  <span className="tiny muted">{p.client}</span>
+                  <span style={{ fontWeight: 600, color: "var(--ink)" }}>{p.name}</span>
+                </div>
+                <div className="tiny"><span className="eyebrow">Total</span><p className="mono" style={{ color: "var(--ink-2)", marginTop: 2, fontWeight: 600 }}>${total.toLocaleString()}</p></div>
+                <StatusPill status={p.quote.status} />
+                <span className="btn btn-subtle btn-sm">Open</span>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </PageWrap>
+  )
+}

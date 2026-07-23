@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Presentation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fff;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+    .slide {
+      min-height: 100vh;
+      padding: 60px 40px;
+      page-break-after: always;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .slide:last-child { page-break-after: auto; }
+    .header {
+      border-bottom: 3px solid #1a1a1a;
+      padding-bottom: 30px;
+      margin-bottom: 40px;
+    }
+    .logo {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .logo em {
+      font-style: normal;
+      display: block;
+      font-size: 0.65rem;
+      color: #8e8e93;
+      letter-spacing: 0.2em;
+      margin-top: 4px;
+    }
+    .meta {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .meta-item { font-size: 0.85rem; }
+    .meta-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #8e8e93;
+      margin-bottom: 4px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .subtitle {
+      font-size: 1rem;
+      color: #8e8e93;
+      margin-bottom: 8px;
+    }
+    .slide-label {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #fff;
+      background: #1a1a1a;
+      padding: 4px 10px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #8e8e93;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .section-body {
+      font-size: 0.95rem;
+      color: #333;
+      line-height: 1.8;
+    }
+    .section-body p { margin-bottom: 16px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    ul li {
+      padding: 6px 0;
+      padding-left: 20px;
+      position: relative;
+      font-size: 0.9rem;
+    }
+    ul li::before {
+      content: "›";
+      position: absolute;
+      left: 0;
+      color: #1a1a1a;
+      font-weight: 700;
+    }
+    .team-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .team-tag {
+      padding: 6px 14px;
+      border: 1px solid #e5e5e5;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      color: #333;
+    }
+    .summary-box {
+      padding: 24px;
+      background: #fafafa;
+      border-left: 3px solid #1a1a1a;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: #333;
+    }
+    .action-item {
+      display: flex;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.88rem;
+    }
+    .action-who {
+      font-weight: 600;
+      min-width: 120px;
+      color: #1a1a1a;
+    }
+    .action-task { flex: 1; color: #333; }
+    .action-due {
+      color: #8e8e93;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th {
+      text-align: left;
+      padding: 12px 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #8e8e93;
+      border-bottom: 2px solid #1a1a1a;
+    }
+    td {
+      padding: 16px 0;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    td:last-child, th:last-child { text-align: right; }
+    td:nth-child(2) { color: #8e8e93; font-size: 0.85rem; }
+    .totals {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      width: 300px;
+      padding: 8px 0;
+      font-size: 0.9rem;
+    }
+    .total-row.grand {
+      border-top: 2px solid #1a1a1a;
+      margin-top: 8px;
+      padding-top: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .investment-box {
+      background: #fafafa;
+      border: 2px solid #1a1a1a;
+      padding: 30px;
+      margin-top: 20px;
+    }
+    .investment-amount {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .investment-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #8e8e93;
+    }
+    .terms {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .cta {
+      margin-top: 50px;
+      padding: 30px;
+      background: #1a1a1a;
+      color: #fff;
+      text-align: center;
+    }
+    .cta-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .cta-text {
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+    .footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e5e5;
+      font-size: 0.75rem;
+      color: #8e8e93;
+      text-align: center;
+    }
+    @media print {
+      body { padding: 0; }
+      .slide { padding: 40px 30px; }
+      .cta { background: #f5f5f5 !important; color: #1a1a1a !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <div class="header">
+      <div class="logo">
+        Synthos
+        <em>Creative Intelligence</em>
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <div class="meta-label">Client</div>
+          <div id="client">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Company</div>
+          <div id="company">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Project</div>
+          <div id="project">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Date</div>
+          <div id="date">—</div>
+        </div>
+      </div>
+    </div>
+
+    <span class="slide-label">Project Brief</span>
+    <h1 id="title">Project Brief</h1>
+    <p class="subtitle">Strategic foundation for the creative project</p>
+
+    <div class="section-body">
+      <div class="grid">
+        <div>
+          <div class="section-title">Business Objective</div>
+          <p id="businessObjective" style="margin-bottom: 20px;">—</p>
+          <div class="section-title">Audience</div>
+          <p id="audience" style="margin-bottom: 20px;">—</p>
+          <div class="section-title">Brand Context</div>
+          <p id="brand">—</p>
+        </div>
+        <div>
+          <div class="section-title">Creative Direction</div>
+          <p id="direction" style="margin-bottom: 20px;">—</p>
+          <div class="section-title">Timeline</div>
+          <p id="timeline" style="margin-bottom: 20px;">—</p>
+          <div class="section-title">Budget</div>
+          <p id="budget">—</p>
+        </div>
+      </div>
+      <div style="margin-top: 20px;">
+        <div class="section-title">Deliverables</div>
+        <ul id="deliverables">—</ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <div class="header">
+      <div class="logo">
+        Synthos
+        <em>Creative Intelligence</em>
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <div class="meta-label">Client</div>
+          <div id="client2">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Meeting Date</div>
+          <div id="meetingDate">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Project</div>
+          <div id="project2">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Participants</div>
+          <div id="participants">—</div>
+        </div>
+      </div>
+    </div>
+
+    <span class="slide-label">Contact Report</span>
+    <h1>Meeting Summary</h1>
+    <p class="subtitle">Key discussion points and outcomes</p>
+
+    <div class="section-body">
+      <div class="section-title">Summary</div>
+      <div class="summary-box" id="summary" style="margin-bottom: 30px;">—</div>
+
+      <div class="grid">
+        <div>
+          <div class="section-title">Key Points</div>
+          <ul id="keyPoints">—</ul>
+        </div>
+        <div>
+          <div class="section-title">Decisions</div>
+          <ul id="decisions">—</ul>
+        </div>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <div class="section-title">Action Items</div>
+        <div id="actionItems">—</div>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <div class="section-title">Next Steps</div>
+        <ul id="nextSteps">—</ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <div class="header">
+      <div class="logo">
+        Synthos
+        <em>Creative Intelligence</em>
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <div class="meta-label">Client</div>
+          <div id="client3">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Project</div>
+          <div id="project3">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Status</div>
+          <div id="status">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Date</div>
+          <div id="date2">—</div>
+        </div>
+      </div>
+    </div>
+
+    <span class="slide-label">Proposal</span>
+    <h1 id="proposalTitle">Proposal</h1>
+    <p class="subtitle">A comprehensive creative project proposal</p>
+
+    <div class="section-body">
+      <div class="section-title">Overview</div>
+      <p id="overview" style="margin-bottom: 30px;">—</p>
+
+      <div class="grid">
+        <div>
+          <div class="section-title">Problem</div>
+          <p id="problem" style="margin-bottom: 20px;">—</p>
+          <div class="section-title">Solution</div>
+          <p id="solution">—</p>
+        </div>
+        <div>
+          <div class="section-title">Scope</div>
+          <ul id="scope">—</ul>
+        </div>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <div class="section-title">Deliverables</div>
+        <ul id="proposalDeliverables">—</ul>
+      </div>
+
+      <div class="grid" style="margin-top: 30px;">
+        <div>
+          <div class="section-title">Team</div>
+          <div class="team-list" id="team">—</div>
+        </div>
+        <div>
+          <div class="section-title">Timeline</div>
+          <p id="timeline2">—</p>
+        </div>
+      </div>
+
+      <div class="investment-box" style="margin-top: 30px;">
+        <div class="investment-label">Investment</div>
+        <div class="investment-amount" id="investment">—</div>
+        <div class="terms" id="terms">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <div class="header">
+      <div class="logo">
+        Synthos
+        <em>Creative Intelligence</em>
+      </div>
+      <div class="meta">
+        <div class="meta-item">
+          <div class="meta-label">Client</div>
+          <div id="client4">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Project</div>
+          <div id="project4">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Date</div>
+          <div id="date3">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Valid Until</div>
+          <div id="validUntil">—</div>
+        </div>
+      </div>
+    </div>
+
+    <span class="slide-label">Quote</span>
+    <h1>Quote</h1>
+    <p class="subtitle">Detailed breakdown of services and investment</p>
+
+    <div class="section-body">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40%">Service</th>
+            <th style="width: 30%">Description</th>
+            <th style="width: 10%">Qty</th>
+            <th style="width: 20%">Rate</th>
+          </tr>
+        </thead>
+        <tbody id="services">
+          <tr>
+            <td colspan="4" style="text-align: center; color: #8e8e93; padding: 40px;">No services added</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <span id="subtotal">—</span>
+        </div>
+        <div class="total-row">
+          <span>Discount</span>
+          <span id="discount">—</span>
+        </div>
+        <div class="total-row">
+          <span>Tax</span>
+          <span id="tax">—</span>
+        </div>
+        <div class="total-row grand">
+          <span>Total</span>
+          <span id="total">—</span>
+        </div>
+      </div>
+
+      <div class="terms-box" style="margin-top: 40px; padding: 24px; background: #fafafa; border: 1px solid #e5e5e5;">
+        <div class="terms-title" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #8e8e93; margin-bottom: 10px;">Payment Terms</div>
+        <div class="terms-text" id="paymentTerms" style="font-size: 0.9rem; color: #555;">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <div class="cta" style="margin-top: 0; min-height: 60vh; display: flex; flex-direction: column; justify-content: center;">
+      <div class="cta-title" style="font-size: 2rem; margin-bottom: 16px;">Ready to move forward?</div>
+      <div class="cta-text" style="font-size: 1rem; max-width: 600px; margin: 0 auto;">
+        Thank you for considering this proposal. We look forward to the opportunity to work together.
+      </div>
+      <div style="margin-top: 40px; font-size: 0.85rem; color: #999;">
+        Synthos Creative Intelligence · synthos.studio
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+
+    const sharedFields = {
+      client: params.get("client") || "—",
+      company: params.get("company") || "—",
+      project: params.get("project") || "—",
+      date: params.get("date") || "—",
+      client2: params.get("client") || "—",
+      project2: params.get("project") || "—",
+      client3: params.get("client") || "—",
+      project3: params.get("project") || "—",
+      status: params.get("status") || "—",
+      date2: params.get("date") || "—",
+      client4: params.get("client") || "—",
+      project4: params.get("project") || "—",
+      date3: params.get("date") || "—",
+    };
+
+    Object.entries(sharedFields).forEach(([key, value]) => {
+      const el = document.getElementById(key)
+      if (el) el.textContent = value
+    })
+
+    const fields = [
+      "title", "subtitle", "businessObjective", "audience", "brand", "direction",
+      "timeline", "budget", "meetingDate", "participants", "summary",
+      "proposalTitle", "overview", "problem", "solution", "timeline2",
+      "investment", "terms", "validUntil", "paymentTerms"
+    ]
+    fields.forEach(f => {
+      const el = document.getElementById(f)
+      if (el && params.get(f)) el.textContent = params.get(f)
+    })
+
+    const deliverables = params.get("deliverables")
+    const deliverablesEl = document.getElementById("deliverables")
+    if (deliverablesEl && deliverables) {
+      try {
+        const items = JSON.parse(deliverables)
+        deliverablesEl.innerHTML = items.map((d: string) => `<li>${d}</li>`).join("")
+      } catch (e) {}
+    }
+
+    const proposalDeliverables = params.get("proposalDeliverables")
+    const proposalDeliverablesEl = document.getElementById("proposalDeliverables")
+    if (proposalDeliverablesEl && proposalDeliverables) {
+      try {
+        const items = JSON.parse(proposalDeliverables)
+        proposalDeliverablesEl.innerHTML = items.map((d: string) => `<li>${d}</li>`).join("")
+      } catch (e) {}
+    }
+
+    const scope = params.get("scope")
+    const scopeEl = document.getElementById("scope")
+    if (scopeEl && scope) {
+      try {
+        const items = JSON.parse(scope)
+        scopeEl.innerHTML = items.map((s: string) => `<li>${s}</li>`).join("")
+      } catch (e) {}
+    }
+
+    const team = params.get("team")
+    const teamEl = document.getElementById("team")
+    if (teamEl && team) {
+      try {
+        const items = JSON.parse(team)
+        teamEl.innerHTML = items.map((t: string) => `<span class="team-tag">${t}</span>`).join("")
+      } catch (e) {}
+    }
+
+    const keyPoints = params.get("keyPoints")
+    const keyPointsEl = document.getElementById("keyPoints")
+    if (keyPointsEl && keyPoints) {
+      try {
+        const items = JSON.parse(keyPoints)
+        keyPointsEl.innerHTML = items.map((k: string) => `<li>${k}</li>`).join("")
+      } catch (e) {}
+    }
+
+    const decisions = params.get("decisions")
+    const decisionsEl = document.getElementById("decisions")
+    if (decisionsEl && decisions) {
+      try {
+        const items = JSON.parse(decisions)
+        decisionsEl.innerHTML = items.map((d: string) => `<li>${d}</li>`).join("")
+      } catch (e) {}
+    }
+
+    const nextSteps = params.get("nextSteps")
+    const nextStepsEl = document.getElementById("nextSteps")
+    if (nextStepsEl && nextSteps) {
+      try {
+        const items = JSON.parse(nextSteps)
+        nextStepsEl.innerHTML = items.map((s: string) => `<li>${s}</li>`).join("")
+      } catch (e) {}
+    }
+
+    const actionItems = params.get("actionItems")
+    const actionItemsEl = document.getElementById("actionItems")
+    if (actionItemsEl && actionItems) {
+      try {
+        const items = JSON.parse(actionItems)
+        actionItemsEl.innerHTML = items.map((item: any) => `
+          <div class="action-item">
+            <span class="action-who">${item.who || ""}</span>
+            <span class="action-task">${item.task || ""}</span>
+            <span class="action-due">${item.due || ""}</span>
+          </div>
+        `).join("")
+      } catch (e) {}
+    }
+
+    const services = params.get("services")
+    const servicesEl = document.getElementById("services")
+    if (servicesEl && services) {
+      try {
+        const items = JSON.parse(services)
+        servicesEl.innerHTML = items.map((s: any) => `
+          <tr>
+            <td><strong>${s.name || ""}</strong></td>
+            <td>${s.desc || ""}</td>
+            <td>${s.qty || 1}</td>
+            <td>$${(s.rate || 0).toLocaleString()}</td>
+          </tr>
+        `).join("")
+      } catch (e) {}
+    }
+
+    const subtotal = params.get("subtotal")
+    if (subtotal) {
+      const el = document.getElementById("subtotal")
+      if (el) el.textContent = "$" + subtotal
+    }
+    const discount = params.get("discount")
+    if (discount) {
+      const el = document.getElementById("discount")
+      if (el) el.textContent = "$" + discount
+    }
+    const tax = params.get("tax")
+    if (tax) {
+      const el = document.getElementById("tax")
+      if (el) el.textContent = "$" + tax
+    }
+    const total = params.get("total")
+    if (total) {
+      const el = document.getElementById("total")
+      if (el) el.textContent = "$" + total
+    }
+  </script>
+</body>
+</html>

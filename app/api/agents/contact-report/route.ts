@@ -80,15 +80,20 @@ export async function POST(request: Request) {
         ? transcript
         : project.clientTranscript ||
           project.fathomNotes ||
-          project.discoveryNotes ||
           discoveryNotes ||
           "Client discovery call completed.";
 
-    // 1. Save Meeting Record in Prisma DB as CLIENT_DISCOVERY
-    await prisma.meeting.create({
-      data: {
+    // 1. Save Meeting Record in Prisma DB as ClientCall
+    await prisma.clientCall.upsert({
+      where: { projectId },
+      create: {
         projectId,
-        type: "CLIENT_DISCOVERY",
+        date: new Date().toISOString(),
+        duration: "30m",
+        summary: clientTranscript.slice(0, 200),
+        transcript: clientTranscript,
+      },
+      update: {
         transcript: clientTranscript,
       },
     });
@@ -116,7 +121,7 @@ Return ONLY brief summary HTML.`;
       // Email to Client: Contact Report Confirmation
       await resend.emails.send({
         from: defaultFromEmail,
-        to: [project.clientEmail],
+        to: [project.clientEmail || "client@example.com"],
         subject: `Executive Contact Report · ${project.name}`,
         html: `<!DOCTYPE html><html><body style="font-family:sans-serif;padding:30px;background:#FAF0F8;">
 <div style="max-width:600px;background:#fff;padding:30px;border:1px solid #e4e4e7;">
@@ -144,12 +149,12 @@ Return ONLY brief summary HTML.`;
       }).catch((e) => console.warn("Resend team email failed:", e));
     }
 
-    // 5. Update Project Stage in Prisma DB to 'internal_sync' (NO Proposal record created for Mission Control queue)
+    // 5. Update Project Stage in Prisma DB to 'internal_sync'
     await prisma.project.update({
       where: { id: projectId },
       data: {
         stage: "internal_sync",
-        discoveryNotes: clientTranscript,
+        contactReportText: summaryHtml,
       },
     });
 

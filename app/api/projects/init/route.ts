@@ -23,9 +23,13 @@ export async function POST(request: Request) {
     const roomName = roomSlug(projectName);
     const project = await prisma.project.create({
       data: {
+        slug: roomName,
+        name: projectName.trim(),
+        client: clientName.trim(),
+        type: "Brand & Campaign",
+        nextAction: "Complete discovery call",
         clientName: clientName.trim(),
         clientEmail: clientEmail.trim().toLowerCase(),
-        name: projectName.trim(),
         roomName,
         stage: "discovery",
         status: "active",

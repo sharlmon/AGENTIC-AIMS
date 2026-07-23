@@ -48,3 +48,10 @@ yarn-error.log*
 
 # Antigravity system logs
 .system_generated/
+
+# clerk configuration (can include secrets)
+/.clerk/
+
+# Temporary work subfolders
+/AIMS/
+/MERGED-PROJECT/

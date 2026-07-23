@@ -1,0 +1,32 @@
+.workflow-rail { list-style: none; display: flex; flex-direction: column; gap: 0; }
+.wr-item { position: relative; }
+.wr-btn {
+  display: flex; gap: 14px; align-items: flex-start; width: 100%;
+  text-align: left; padding: 12px 10px;
+  transition: background var(--tr);
+  border: 1px solid transparent;
+}
+.wr-btn:hover { background: var(--surface-2); }
+.wr-item.current .wr-btn { background: var(--surface-2); border-color: var(--line); }
+
+.wr-node {
+  flex: none; width: 36px; height: 36px;
+  display: grid; place-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem; font-weight: 700;
+  border: 1.5px solid var(--line-strong); color: var(--ink-3);
+  background: var(--surface);
+}
+.wr-item.done .wr-node { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.wr-item.current .wr-node { border-color: var(--signal); color: var(--signal); background: var(--surface-2); }
+
+.wr-text { display: flex; flex-direction: column; gap: 2px; padding-top: 2px; }
+.wr-label { font-size: 0.9rem; font-weight: 600; color: var(--ink-2); }
+.wr-item.current .wr-label { color: var(--ink); }
+.wr-desc { font-size: 0.76rem; color: var(--ink-muted); line-height: 1.4; }
+
+.wr-item:not(:last-child) .wr-btn::after {
+  content: ""; position: absolute; left: 23px; top: 40px; bottom: -4px;
+  width: 1.5px; background: var(--line); z-index: 0;
+}
+.wr-item.done:not(:last-child) .wr-btn::after { background: var(--ink); }

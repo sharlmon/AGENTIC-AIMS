@@ -219,8 +219,7 @@ export async function POST(request: Request) {
         data: {
           clientTranscript: validTranscript,
           fathomNotes: validTranscript,
-          discoveryNotes: summaryText,
-          contactReport: summaryHtmlTemplate(summaryText, project.clientName, project.name),
+          contactReportText: summaryHtmlTemplate(summaryText, project.clientName || project.client || "Client", project.name),
         },
       });
     } else if (currentStage === "internal_sync") {
@@ -261,7 +260,7 @@ export async function POST(request: Request) {
             body: JSON.stringify({
               projectId: project.id,
               transcript: validTranscript,
-              discoveryNotes: project.discoveryNotes || summaryText,
+              discoveryNotes: project.contactReportText || summaryText,
               title: `Proposal · ${project.name}`,
             }),
           });

@@ -163,11 +163,17 @@ export async function POST(request: Request) {
 
     const internalTranscript = transcript || project.fathomNotes || "Internal production sync completed.";
 
-    // 1. Save Meeting Record as INTERNAL_PRODUCTION in Prisma DB
-    await prisma.meeting.create({
-      data: {
+    // 1. Save Meeting Record in Prisma DB
+    await prisma.clientCall.upsert({
+      where: { projectId },
+      create: {
         projectId,
-        type: "INTERNAL_PRODUCTION",
+        date: new Date().toISOString(),
+        duration: "30m",
+        summary: internalTranscript.slice(0, 200),
+        transcript: internalTranscript,
+      },
+      update: {
         transcript: internalTranscript,
       },
     });
@@ -184,7 +190,7 @@ export async function POST(request: Request) {
 
 Client Name: ${project.clientName}
 Project Name: ${project.name}
-Discovery Context: ${discoveryNotes || project.discoveryNotes || "Standard Agency Technical Execution"}
+Discovery Context: ${discoveryNotes || project.contactReportText || "Standard Agency Technical Execution"}
 Internal Production Transcript: ${internalTranscript}
 
 ${draft ? `Previous Draft Attempt:\n${draft}\nMeta-Auditor Feedback:\n${audit.feedback}` : ""}

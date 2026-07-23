@@ -1,105 +1,565 @@
+// Synthos — Creative Intelligence & Project Automation Platform
+// Data model for the Human + AI creative workflow.
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
-enum ProjectStage {
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  initials  String
+  role      String   @default("strategist") // strategist | creative | producer | lead | client
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects  Project[]
+}
+
+model Project {
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  name         String
+  client       String
+  clientId     String?
+  clientRef    Client?    @relation(fields: [clientId], references: [id])
+  type         String // Brand & Campaign | Film & Motion | Web & Product | Strategy & Campaign
+  stage        Stage      @default(brief)
+  progress     Int        @default(0)
+  status       ProjStatus @default(active)
+  lastActivity DateTime   @default(now())
+  nextAction   String
+  ownerId      String?
+  owner        User?      @relation(fields: [ownerId], references: [id])
+  aiActivity   Int      @default(0)
+  publicToken  String?  @unique
+  deliverables Json?
+  aiWorkflowStatus Json?
+  clientEmail           String?
+  clientName            String?
+  roomName              String?
+  clientTranscript      String?
+  internalTranscript    String?
+  contactReportText     String?
+  finalRefinedProposal  String?
+  fathomNotes           String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  brief        Brief?
+  call         ClientCall?
+  transcript   Transcript?
+  understanding Understanding?
+  projectBrief ProjectBrief?
+  workshop     Workshop?
+  synthesis    Synthesis?
+  proposal     Proposal?
+  quote        Quote?
+  approvals    Approval[]
+  contactReport ContactReport?
+  productionMeeting ProductionMeeting?
+  conversations Conversation[]
+  invoices     Invoice[]
+
+  @@index([stage])
+  @@index([status])
+  @@index([clientId])
+}
+
+enum Stage {
+  brief
+  call
+  contactReport
+  productionMeeting
+  proposal
+  quote
+  approval
+  transcript
+  understanding
+  projectBrief
+  workshop
+  synthesis
   discovery
   internal_sync
   ready_for_dispatch
   delivered
 }
 
-enum ProjectStatus {
+enum ProjStatus {
   active
-  archived
-}
-
-enum MeetingType {
-  CLIENT_DISCOVERY
-  INTERNAL_PRODUCTION
-}
-
-enum ProposalType {
-  CONTACT_REPORT
-  FINAL_PROPOSAL
-}
-
-enum ProposalStatus {
+  attention
+  review
+  complete
   draft
+  ready_for_dispatch
   approved
   dispatched
+  delivered
+}
+
+// ----- Stage 1: Creative Brief -----
+model Brief {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  clientName    String
+  company       String
+  contact       String
+  industry      String
+  title         String
+  businessObjective String
+  objectives    Json?
+  audience      String
+  brand         String
+  direction     String
+  deliverables  Json?
+  budget        String
+  timeline      String
+  attachments   Json?
+  context       String
+
+  aiWants       Json?
+  aiObjectives  Json?
+  aiRequirements Json?
+  aiRisks       Json?
+  aiMissing     Json?
+  aiQuestions   Json?
+  aiConfidence  Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ----- Stage 2: Client Call -----
+model ClientCall {
+  id            String   @id @default(cuid())
+  projectId     String   @unique
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  date          String
+  duration      String
+  participants  Json?
+  summary       String
+  roomName      String?
+  roomUrl       String?
+  meetingSource String?   @default("embedded") // embedded | zoom | teams | in-person | phone | custom
+  artifacts     Json?     // [{ name, url, mimeType, size }] — uploaded docs, transcripts, audio
+  transcript    String?   // extracted text from artifacts or pasted notes
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ----- Stage 3: Meeting Transcript -----
+model Transcript {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  lines     Json // [{ speaker, role: ai|client|team, text }]
+  moments   Json // [{ time, label, note }]
+  decisions Json?
+  actions   Json // [{ who, task, due }]
+  requirements Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ----- Stage 4: AI Understanding -----
+model Understanding {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  confidence Int     @default(0)
+  insights  Insight[] // filter by `group`: wants | businessObjectives | creativeObjectives | constraints | risks | missing | questions
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Insight {
+  id        String   @id @default(cuid())
+  group     String // wants | businessObjectives | creativeObjectives | constraints | risks | missing | questions
+  text      String
+  attr      Attr    @default(ai)
+  status    ReviewStatus @default(draft)
+  note      String?
+  understandingId String
+  understanding Understanding @relation(fields: [understandingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([understandingId])
+}
+
+enum Attr {
+  ai
+  human
+  mixed
+}
+
+enum ReviewStatus {
+  draft
+  review
+  approved
+  rejected
   ready_for_dispatch
+  dispatched
+  delivered
 }
 
-model Project {
-  id                   String        @id @default(cuid())
-  clientName           String
-  clientEmail          String
-  name                 String
-  roomName             String?       @unique
-  serviceLine          String?
-  stage                ProjectStage  @default(discovery)
-  status               ProjectStatus @default(active)
-  discoveryNotes       String?
-  fathomNotes          String?
-  clientTranscript     String?
-  internalTranscript   String?
-  contactReport        String?
-  finalRefinedProposal String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-  meetings             Meeting[]
-  proposals            Proposal[]
-  invoices             Invoice[]
+// ----- Stage 5: Structured Project Brief -----
+model ProjectBrief {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  summary         String
+  businessObjective String
+  creativeObjective  String
+  audience        String
+  direction       String
+  deliverables    Json?
+  timeline        String
+  budget          String
+  risks           Json?
+  openQuestions   Json?
+  successCriteria Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model Meeting {
-  id         String      @id @default(cuid())
-  projectId  String
-  type       MeetingType
-  transcript String
-  createdAt  DateTime    @default(now())
-  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
+// ----- Stage 6: Creative Intelligence Workshop -----
+model Workshop {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  humanNotes String
+  insights  WorkshopInsight[] // filter by `group`: questions | brandInsights | audienceInsights | opportunities | challenges | directions
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+model WorkshopInsight {
+  id        String  @id @default(cuid())
+  group     String // questions | brandInsights | audienceInsights | opportunities | challenges | directions
+  text      String
+  attr      Attr    @default(ai)
+  status    ReviewStatus @default(draft)
+  workshopId String
+  workshop  Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workshopId])
+}
+
+// ----- Stage 7: AI Synthesis -----
+model Synthesis {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  executiveSummary String
+  strategicDirection String
+  creativeDirection  String
+  approach       String
+  deliverables   Json?
+  timeline       String
+  risks          Json?
+  openQuestions  Json?
+  decisions      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ----- Stage 8: Proposal -----
 model Proposal {
-  id              String         @id @default(cuid())
-  projectId       String
-  type            ProposalType   @default(FINAL_PROPOSAL)
-  title           String
-  content         String
-  status          ProposalStatus @default(draft)
-  recipientEmail  String
-  confidenceScore Int
-  iterations      Int            @default(1)
-  metaAuditNotes  String
-  approvedAt      DateTime?
-  dispatchedAt    DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  project         Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId, status])
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clientDetails String?
+  overview     String?
+  problem      String?
+  solution     String?
+  scope        Json?
+  deliverables Json?
+  timeline     String?
+  team         Json?
+  investment   String?
+  terms        String?
+  type         String   @default("FINAL_PROPOSAL")
+  title        String?
+  content      String?
+  recipientEmail String?
+  confidenceScore Int   @default(95)
+  iterations   Int      @default(1)
+  metaAuditNotes String?
+  approvedAt   DateTime?
+  dispatchedAt DateTime?
+  status       ReviewStatus @default(draft)
+  sections     Json? // [{ title, body, attr }]
+  publicToken  String? @unique
+  sentToClient Boolean @default(false)
+  sentAt      DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model Invoice {
-  id        String    @id @default(cuid())
-  projectId String
-  number    String    @unique
-  amount    Decimal
-  currency  String    @default("USD")
-  dueDate   DateTime?
-  paidAt    DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+// ----- Stage 9: Quote -----
+model Quote {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  services  Json // [{ name, desc, qty, rate }]
+  discount  Int      @default(0)
+  tax       Int      @default(0)
+  paymentTerms String
+  status    ReviewStatus @default(draft)
+  publicToken String? @unique
+  sentToClient Boolean @default(false)
+  sentAt      DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ----- Stage 10: Approvals -----
+model Approval {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind        String // proposal | quote | risk | decision
+  refId       String? // insight id etc.
+  title       String
+  note        String?
+  status      ReviewStatus @default(review)
+  decidedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([projectId])
+  @@index([status])
+}
+
+// ----- Billing -----
+model Invoice {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  number      String   @unique
+  items       Json // [{ name, desc, qty, rate }]
+  subtotal    Int
+  discount    Int      @default(0)
+  tax         Int      @default(0)
+  total       Int
+  paymentTerms String
+  status      String   @default("draft") // draft | sent | paid | overdue | cancelled
+  dueDate     DateTime?
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+}
+
+// ----- Talent Management -----
+model Talent {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  role        String // creative | strategist | producer | designer | developer | animator
+  skills      Json?
+  experience  Int      @default(0) // years
+  rating      Float    @default(0)
+  availability String // available | busy | unavailable
+  rate         String
+  portfolio    String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([role])
+  @@index([availability])
+}
+
+// ----- Client CRM -----
+model Client {
+  id          String   @id @default(cuid())
+  name        String
+  company     String
+  email       String
+  phone       String?
+  industry    String?
+  status      String   @default("lead") // lead | active | paused | completed
+  source      String?
+  value       String?
+  lastContact String?
+  nextAction  String?
+  tags        Json?
+  notes       String?
+  dossier     Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projects    Project[]
+
+  @@index([status])
+}
+
+// ----- Blog & News -----
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String
+  coverImage  String?
+  kind        String   @default("blog") // blog | news
+  status      String   @default("draft") // draft | published | archived
+  publishedAt DateTime?
+  authorId    String?
+  authorName  String?
+  tags        Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([kind])
+  @@index([status])
+  @@index([slug])
+}
+
+// ----- Careers -----
+model Career {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  requirements Json?
+  type        String   @default("full-time") // full-time | part-time | contract | internship
+  location    String?
+  salaryMin   String?
+  salaryMax   String?
+  status      String   @default("open") // open | closed | filled
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([slug])
+}
+
+// ----- Team Members & Roles -----
+model TeamMember {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  role        String   // creative_writer | producer | account_manager | admin
+  skills      Json?
+  availability String  @default("available") // available | busy | unavailable
+  avatar      String?
+  description String?
+  calendarJson Json?   // busy slots from external calendar
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([role])
+  @@index([availability])
+}
+
+// ----- Contact Reports -----
+model ContactReport {
+  id          String   @id @default(cuid())
+  projectId   String   @unique
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  summary     String
+  keyPoints   Json?
+  decisions   Json?
+  actionItems Json?    // [{ who, task, due }]
+  nextSteps   Json?
+  approved    Boolean  @default(false)
+  sentToClient Boolean @default(false)
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model ProductionMeeting {
+  id          String   @id @default(cuid())
+  projectId   String   @unique
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  decision    String   // approved | declined | revised
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// ----- Contact Form Submissions -----
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  company   String?
+  subject   String
+  message   String
+  status    String   @default("new") // new | read | replied | closed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ----- Inbuilt Messaging -----
+model Conversation {
+  id          String   @id @default(cuid())
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  participants Json? // user ids or emails
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    Message[]
+}
+
+model Message {
+  id            String   @id @default(cuid())
+  conversationId String
+  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId      String?
+  senderName    String?
+  senderRole    String?  // admin | client | account_manager | system
+  recipientId   String?
+  subject       String?
+  body          String
+  attachments   Json?
+  kind          String   @default("message") // message | proposal | quote | report
+  refId         String?  // proposal id / quote id / report id
+  read          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([refId])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  message     String
+  kind        String   @default("info") // info | approval | message | system
+  refId       String?  // project id / proposal id / etc
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
 }

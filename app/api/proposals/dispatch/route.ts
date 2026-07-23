@@ -93,7 +93,7 @@ export async function POST(request: Request) {
               projectId: project.id,
               type: "FINAL_PROPOSAL",
               title: `Proposal · ${project.name}`,
-              content: project.finalRefinedProposal || project.contactReport || "Synthesized client proposal.",
+              content: project.finalRefinedProposal || project.contactReportText || "Synthesized client proposal.",
               status: "ready_for_dispatch",
               recipientEmail: project.clientEmail,
               confidenceScore: 98,
@@ -117,13 +117,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const targetEmail = proposal.recipientEmail || proposal.project.clientEmail;
+    const targetEmail = proposal.recipientEmail || proposal.project.clientEmail || "client@example.com";
     const emailHtml = buildClientEmailHtml(proposal, proposal.project);
 
     let { data, error } = await resend.emails.send({
       from: senderEmail,
       to: [targetEmail],
-      subject: proposal.title,
+      subject: proposal.title || "Final Proposal",
       html: emailHtml,
     });
 
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
       const fallbackResult = await resend.emails.send({
         from: "onboarding@resend.dev",
         to: [targetEmail],
-        subject: proposal.title,
+        subject: proposal.title || "Final Proposal",
         html: emailHtml,
       });
       data = fallbackResult.data;
