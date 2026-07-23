@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum ProjectStage {
+  discovery
+  internal_sync
+  ready_for_dispatch
+  delivered
+}
+
+enum ProjectStatus {
+  active
+  archived
+}
+
+enum MeetingType {
+  CLIENT_DISCOVERY
+  INTERNAL_PRODUCTION
+}
+
+enum ProposalType {
+  CONTACT_REPORT
+  FINAL_PROPOSAL
+}
+
+enum ProposalStatus {
+  draft
+  approved
+  dispatched
+  ready_for_dispatch
+}
+
+model Project {
+  id                   String        @id @default(cuid())
+  clientName           String
+  clientEmail          String
+  name                 String
+  roomName             String?       @unique
+  serviceLine          String?
+  stage                ProjectStage  @default(discovery)
+  status               ProjectStatus @default(active)
+  discoveryNotes       String?
+  fathomNotes          String?
+  clientTranscript     String?
+  internalTranscript   String?
+  contactReport        String?
+  finalRefinedProposal String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  meetings             Meeting[]
+  proposals            Proposal[]
+  invoices             Invoice[]
+}
+
+model Meeting {
+  id         String      @id @default(cuid())
+  projectId  String
+  type       MeetingType
+  transcript String
+  createdAt  DateTime    @default(now())
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Proposal {
+  id              String         @id @default(cuid())
+  projectId       String
+  type            ProposalType   @default(FINAL_PROPOSAL)
+  title           String
+  content         String
+  status          ProposalStatus @default(draft)
+  recipientEmail  String
+  confidenceScore Int
+  iterations      Int            @default(1)
+  metaAuditNotes  String
+  approvedAt      DateTime?
+  dispatchedAt    DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  project         Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+}
+
+model Invoice {
+  id        String    @id @default(cuid())
+  projectId String
+  number    String    @unique
+  amount    Decimal
+  currency  String    @default("USD")
+  dueDate   DateTime?
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
