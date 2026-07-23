@@ -5,6 +5,6 @@ export async function GET() {
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ isAdmin: false })
 
-  const adminIds = (process.env.ADMIN_USER_IDS || "").split(",").map(id => id.trim()).filter(Boolean)
-  return NextResponse.json({ isAdmin: adminIds.includes(userId) })
+  // Any signed-in user is granted creator/admin access to Dashboard & Mission Control
+  return NextResponse.json({ isAdmin: true })
 }

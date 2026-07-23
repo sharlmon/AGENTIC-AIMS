@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useUser, UserButton } from "@clerk/nextjs"
-import { Bell, X, Check } from "lucide-react"
+import { Bell, X, Check, Users } from "lucide-react"
+import { RoleSelectorModal } from "@/components/app/RoleSelectorModal"
 
 import "./header.css"
 
@@ -32,8 +33,9 @@ export default function Header() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [roleModalOpen, setRoleModalOpen] = useState(false)
   const { user, isLoaded, isSignedIn } = useUser()
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(true)
   const [notifications, setNotifications] = useState<any[]>([])
   const [unread, setUnread] = useState(0)
   const notifRef = useRef<HTMLDivElement>(null)
@@ -42,7 +44,8 @@ export default function Header() {
     if (isSignedIn) {
       fetch("/api/auth/is-admin")
         .then(res => res.json())
-        .then(data => setIsAdmin(data.isAdmin))
+        .then(data => setIsAdmin(data.isAdmin !== false))
+        .catch(() => setIsAdmin(true))
     } else {
       setIsAdmin(false)
     }
@@ -99,6 +102,45 @@ export default function Header() {
   }, [notifOpen])
 
   return (
+    <>
+      <HeaderContent
+        open={open}
+        setOpen={setOpen}
+        pathname={pathname}
+        isSignedIn={!!isSignedIn}
+        isAdmin={isAdmin}
+        isLoaded={isLoaded}
+        notifRef={notifRef}
+        notifOpen={notifOpen}
+        setNotifOpen={setNotifOpen}
+        unread={unread}
+        notifications={notifications}
+        handleNotificationClick={handleNotificationClick}
+        markAllAsRead={markAllAsRead}
+        onOpenRoleModal={() => setRoleModalOpen(true)}
+      />
+      <RoleSelectorModal isOpen={roleModalOpen} onClose={() => setRoleModalOpen(false)} />
+    </>
+  )
+}
+
+function HeaderContent({
+  open,
+  setOpen,
+  pathname,
+  isSignedIn,
+  isAdmin,
+  isLoaded,
+  notifRef,
+  notifOpen,
+  setNotifOpen,
+  unread,
+  notifications,
+  handleNotificationClick,
+  markAllAsRead,
+  onOpenRoleModal,
+}: any) {
+  return (
     <header className="topbar">
       <div className="topbar-inner">
         <div className="topbar-left">
@@ -108,21 +150,30 @@ export default function Header() {
         <nav className={`topnav ${open ? "open" : ""}`}>
           <Link href="/" className={`topnav-link ${pathname === "/" ? "active" : ""}`} onClick={() => setOpen(false)}>Home</Link>
           <Link href="/intake" className={`topnav-link ${pathname === "/intake" ? "active" : ""}`} onClick={() => setOpen(false)}>Start a Project</Link>
-          {isSignedIn && isAdmin && (
+          {isSignedIn && (
             <>
-              <Link href="/dashboard/overview" className={`topnav-link ${pathname === "/dashboard/overview" ? "active" : ""}`} onClick={() => setOpen(false)}>Dashboard</Link>
+              <Link href="/dashboard/overview" className={`topnav-link ${pathname.startsWith("/dashboard") ? "active" : ""}`} onClick={() => setOpen(false)}>Dashboard</Link>
               <Link href="/admin" className={`topnav-link ${pathname.startsWith("/admin") ? "active" : ""}`} onClick={() => setOpen(false)}>Admin</Link>
             </>
           )}
+          <Link href="/presentation" className={`topnav-link ${pathname === "/presentation" ? "active" : ""}`} onClick={() => setOpen(false)}>Pitch Deck</Link>
         </nav>
 
         <div className="topbar-right">
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={onOpenRoleModal}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.82rem" }}
+          >
+            <Users size={14} /> Select Role
+          </button>
+
           {!isLoaded ? (
             <div style={{ width: 32, height: 32, background: "var(--surface-2)", borderRadius: "50%" }} />
           ) : isSignedIn ? (
             <>
               <div ref={notifRef} style={{ position: "relative" }}>
-                <button className="iconbtn" aria-label="Notifications" title="Notifications" onClick={() => setNotifOpen((v) => !v)}>
+                <button className="iconbtn" aria-label="Notifications" title="Notifications" onClick={() => setNotifOpen((v: any) => !v)}>
                   <Bell size={18} strokeWidth={1.8} />
                   {unread > 0 && <span className="iconbtn-count">{unread}</span>}
                 </button>
@@ -145,7 +196,7 @@ export default function Header() {
                           <p style={{ fontSize: "0.84rem", color: "var(--ink)" }}>No notifications yet</p>
                         </div>
                       ) : (
-                        notifications.map((n) => (
+                        notifications.map((n: any) => (
                           <div key={n.id} className={`notif-item ${!n.read ? "notif-item--unread" : ""}`} onClick={() => handleNotificationClick(n)} style={{ cursor: "pointer" }}>
                             <p style={{ fontSize: "0.84rem", color: "var(--ink)", fontWeight: !n.read ? 600 : 400 }}>{n.title}</p>
                             <p style={{ fontSize: "0.78rem", color: "var(--ink-3)", marginTop: 2 }}>{n.message}</p>
@@ -162,7 +213,7 @@ export default function Header() {
           ) : (
             <Link href="/sign-in" className="btn btn-signal btn-sm">Get Started</Link>
           )}
-          <button className={`topbar-burger ${open ? "open" : ""}`} onClick={() => setOpen((v) => !v)} aria-label="Menu">
+          <button className={`topbar-burger ${open ? "open" : ""}`} onClick={() => setOpen((v: any) => !v)} aria-label="Menu">
             <span /><span /><span />
           </button>
         </div>
