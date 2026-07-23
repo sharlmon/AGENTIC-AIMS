@@ -3,8 +3,9 @@ export const dynamic = 'force-dynamic'
 import Link from "next/link"
 import { getProjects } from "@/lib/data-server"
 import { PageHead, PageWrap } from "@/components/app/Page"
-import { Panel, PanelHeader, StatusPill, Progress, Confidence, Empty } from "@/components/app/ui"
+import { Panel, StatusPill, Progress } from "@/components/app/ui"
 import CreateProjectForm from "./CreateProjectForm"
+import { Sparkles, Plus, CheckCircle2, ArrowRight } from "lucide-react"
 import "./app.css"
 
 function stageLabel(s: any) {
@@ -22,81 +23,71 @@ export default async function OverviewPage() {
   return (
     <PageWrap>
       <PageHead
-        eyebrow="Workspace"
-        title="What needs your attention next?"
-        desc="A calm view of every active project, where the AI has moved things forward, and what only a human can decide."
+        eyebrow="Workspace Control"
+        title="Creator & Workspace Overview"
+        desc="A unified, high-contrast view of your active client projects, AI background synthesis, and pending decisions."
         actions={
-          <>
-            <Link href="/dashboard/projects" className="btn btn-ghost">All projects</Link>
-            <Link href="/dashboard/approvals" className="btn btn-signal">Review approvals · {awaitingApproval.length}</Link>
-          </>
+          <div style={{ display: "flex", gap: 10 }}>
+            <Link href="/intake" className="btn btn-signal btn-sm">
+              <Plus size={16} /> New Project Request
+            </Link>
+          </div>
         }
       />
 
       <div className="ov-stats">
-        <Stat label="Active projects" value={projects.length} sub="across clients" />
-        <Stat label="AI activity" value={totalAI} sub="insights this week" tone="ai" />
+        <Stat label="Active projects" value={projects.length} sub="in pipeline" />
+        <Stat label="AI activity" value={totalAI} sub="automated steps" tone="ai" />
         <Stat label="Needs attention" value={needsAttention.length} sub="review required" tone="signal" />
-        <Stat label="Awaiting approval" value={awaitingApproval.length} sub="human decision" tone="human" />
+        <Stat label="Awaiting approval" value={awaitingApproval.length} sub="pending client decision" tone="human" />
       </div>
 
       {(projects || []).length === 0 ? (
-        <Panel>
-          <div style={{ padding: 40, textAlign: "center" }}>
-            <Empty title="No projects yet" hint="Create your first project to start the workflow." />
-            <div style={{ marginTop: 18 }}><CreateProjectForm /></div>
+        <Panel style={{ marginTop: 24 }}>
+          <div style={{ padding: "56px 32px", textAlign: "center" }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%", background: "rgba(255, 255, 255, 0.05)",
+              border: "1px solid rgba(255, 255, 255, 0.1)", display: "grid", placeItems: "center", margin: "0 auto 20px", color: "#a1a1aa"
+            }}>
+              <Sparkles size={28} />
+            </div>
+            <h3 style={{ fontSize: "1.4rem", fontWeight: 700, margin: "0 0 10px", color: "#ffffff" }}>
+              Your Workspace is Reset & Ready
+            </h3>
+            <p style={{ color: "var(--ink-2)", fontSize: "0.95rem", maxWidth: "460px", margin: "0 auto 28px", lineHeight: 1.6 }}>
+              There are currently no active projects. Submit a 30-Second Micro-Spark project request to see the AI workflow engine in action.
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <Link href="/intake" className="btn btn-signal">
+                Start a Project Request <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
         </Panel>
       ) : (
-        <div className="ov-grid">
+        <div className="ov-grid" style={{ marginTop: 24 }}>
           <section className="stack gap-4">
-            <h3 className="section-title">Projects requiring attention</h3>
-            {needsAttention.length === 0 && <p className="muted tiny">Nothing urgent — all projects are progressing smoothly.</p>}
-            {needsAttention.map((p: any) => (
+            <h3 className="section-title">Active Projects & Workflows</h3>
+            {(projects || []).map((p: any) => (
               <Link key={p.id} href={`/dashboard/projects/${p.id}`} className="ov-card">
                 <div className="row between gap-3">
                   <div className="stack gap-1">
                     <span className="ov-card-title">{p.name}</span>
-                    <span className="tiny muted">{p.client} · {stageLabel(p)}</span>
+                    <span className="tiny muted">{p.client} · Stage: {stageLabel(p)}</span>
                   </div>
                   <StatusPill status={p.status} />
                 </div>
-                <p className="tiny muted" style={{ marginTop: 10 }}>Next: {p.nextAction}</p>
+                <p className="tiny muted" style={{ marginTop: 10 }}>Next Step: {p.nextAction}</p>
                 <div style={{ marginTop: 12 }}><Progress value={p.progress} /></div>
-              </Link>
-            ))}
-
-            <h3 className="section-title" style={{ marginTop: 8 }}>Awaiting human approval</h3>
-            {awaitingApproval.map((p: any) => (
-              <Link key={p.id} href={`/dashboard/projects/${p.id}`} className="ov-approve">
-                <span className="dot dot-attention" />
-                <div className="grow">
-                  <span className="ov-card-title" style={{ fontSize: "0.95rem" }}>{p.name}</span>
-                  <span className="tiny muted" style={{ display: "block" }}>
-                    {p.proposal?.status === "review" ? "Proposal ready for review · " : ""}
-                    {p.quote?.status === "review" ? "Quote ready for review · " : ""}
-                    {p.client}
-                  </span>
-                </div>
-                <span className="btn btn-subtle btn-sm">Open</span>
               </Link>
             ))}
           </section>
 
           <aside className="stack gap-4">
             <Panel>
-              <PanelHeader eyebrow="Quick actions" title="Move work forward" />
-              <div className="stack gap-2" style={{ padding: 16 }}>
+              <div style={{ padding: "20px" }}>
+                <span className="eyebrow" style={{ color: "#818cf8", marginBottom: 8, display: "block" }}>Quick Creation</span>
                 <CreateProjectForm />
-              </div>
-            </Panel>
-
-            <Panel>
-              <PanelHeader eyebrow="Principle" title="Human + AI" />
-              <div className="hai-box">
-                <div><span className="tag-ai"><span className="dot dot-ai" /> AI assists</span><p className="tiny muted" style={{ marginTop: 8 }}>Understands briefs, analyses calls, synthesises intelligence.</p></div>
-                <div style={{ margin: "4px 0" }} className="hai-div" />
-                <div><span className="tag-human"><span className="dot dot-human" /> Humans decide</span><p className="tiny muted" style={{ marginTop: 8 }}>Review, edit, and approve every output before it ships.</p></div>
               </div>
             </Panel>
           </aside>
@@ -107,7 +98,7 @@ export default async function OverviewPage() {
 }
 
 function Stat({ label, value, sub, tone }: { label: string; value: number; sub: string; tone?: "ai" | "signal" | "human" }) {
-  const c = tone === "ai" ? "var(--ai)" : tone === "signal" ? "var(--signal)" : tone === "human" ? "var(--human)" : "var(--ink)"
+  const c = tone === "ai" ? "#818cf8" : tone === "signal" ? "#f87171" : tone === "human" ? "#34d399" : "#ffffff"
   return (
     <div className="ov-stat panel">
       <span className="eyebrow">{label}</span>
