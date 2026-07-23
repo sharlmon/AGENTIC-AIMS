@@ -1,10 +1,10 @@
 const BRAND = {
-  name: "Lumyn",
-  domain: "lumyn.co.ke",
-  email: "info@lumyn.co.ke",
-  color: "#0f172a",
-  accent: "#6366f1",
-  buttonBg: "#0f172a",
+  name: "Synthos",
+  domain: "synthos.dev",
+  email: "info@synthos.dev",
+  color: "#09090b",
+  accent: "#818cf8",
+  buttonBg: "#09090b",
   buttonText: "#ffffff",
   text: "#334155",
   muted: "#64748b",
@@ -64,8 +64,12 @@ function wrap(title: string, body: string, preheader = "") {
             </div>
 
             <div class="footer">
-              <p>${escapeHtml(BRAND.name)} · ${escapeHtml(BRAND.domain)} · ${escapeHtml(BRAND.email)}</p>
-              <p style="margin-top: 6px;">This message was sent because you submitted a project request or are part of an active project.</p>
+              <p>
+                Synthos · <a href="https://${BRAND.domain}">${BRAND.domain}</a> · <a href="mailto:${BRAND.email}">${BRAND.email}</a>
+              </p>
+              <p style="margin-top:4px;">
+                This message was sent because you submitted a project request or are part of an active project.
+              </p>
             </div>
           </div>
         </div>
@@ -73,11 +77,12 @@ function wrap(title: string, body: string, preheader = "") {
     </tr>
   </table>
 </body>
-</html>`
+</html>
+`
 }
 
-function escapeHtml(text: string) {
-  return text
+function escapeHtml(text: string): string {
+  return String(text)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -85,136 +90,118 @@ function escapeHtml(text: string) {
     .replace(/'/g, "&#039;")
 }
 
-function button(href: string, label: string, variant: "primary" | "secondary" = "primary") {
-  const className = variant === "secondary" ? "btn secondary" : "btn"
-  return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" class="${className}">${escapeHtml(label)}</a>`
+function formatList(items: string[]): string {
+  if (!items || items.length === 0) return ""
+  return `<ul>${items.map((item) => `li>${escapeHtml(item)}</li>`).join("")}</ul>`
 }
 
-export function callScheduledEmail(params: { clientName: string; projectName: string; dailyUrl: string }) {
-  const { clientName, projectName, dailyUrl } = params
+export function buildContactReportEmail(params: {
+  clientName: string
+  projectName: string
+  summary: string
+  publicUrl?: string
+}) {
+  const title = `Contact report ready: ${params.projectName}`
   const body = `
-    <p class="greeting">Hi ${escapeHtml(clientName)},</p>
-    <p>We are excited to get started. A discovery call has been scheduled for your project <strong>${escapeHtml(projectName)}</strong>.</p>
-    <div class="actions">
-      ${button(dailyUrl, "Join Meeting")}
-    </div>
-    <div class="divider"></div>
-    <p style="color: ${BRAND.muted}; font-size: 14px;">The meeting link will be active at the scheduled time. If you cannot make it, reply to this email and we will reschedule.</p>
-  `
-  return wrap("Discovery call scheduled", body, `Your discovery call for ${projectName} is scheduled. Click to join.`)
-}
-
-export function contactReportReadyEmail(params: { clientName: string; projectName: string; summary: string }) {
-  const { clientName, projectName, summary } = params
-  const body = `
-    <p class="greeting">Hi ${escapeHtml(clientName)},</p>
-    <p>Thank you for the discovery call. Here is a summary of what we discussed for <strong>${escapeHtml(projectName)}</strong>.</p>
+    <p class="greeting">Hi ${escapeHtml(params.clientName)},</p>
+    <p>Thank you for the discovery call. Here is a summary of what we discussed for <strong>${escapeHtml(params.projectName)}</strong>.</p>
+    
     <div class="meta">
-      <p><strong>Summary</strong></p>
-      <p style="margin-top: 6px;">${escapeHtml(summary)}</p>
+      <div style="font-weight: 600; margin-bottom: 6px;">Summary</div>
+      <div style="line-height: 1.6;">${escapeHtml(params.summary)}</div>
     </div>
+    
     <p>We are now preparing the production plan and proposal. We will be in touch shortly with the next steps.</p>
-  `
-  return wrap("Contact report ready", body, `Contact report for ${projectName} is ready.`)
-}
-
-export function proposalReadyEmail(params: { clientName: string; projectName: string; proposalUrl: string; projectUrl: string }) {
-  const { clientName, projectName, proposalUrl, projectUrl } = params
-  const body = `
-    <p class="greeting">Hi ${escapeHtml(clientName)},</p>
-    <p>Your proposal for <strong>${escapeHtml(projectName)}</strong> is ready for review.</p>
-    <p style="color: ${BRAND.muted}; font-size: 14px;">Please review the proposal and let us know if you have any questions before approving.</p>
+    
+    ${
+      params.publicUrl
+        ? `
     <div class="actions">
-      ${button(proposalUrl, "Review Proposal", "primary")}
-      ${button(projectUrl, "View Project", "secondary")}
+      <a href="${escapeHtml(params.publicUrl)}" class="btn">View Project Status →</a>
     </div>
+    `
+        : ""
+    }
   `
-  return wrap("Proposal ready", body, `Your proposal for ${projectName} is ready for review.`)
+  return { subject: title, html: wrap(title, body) }
 }
 
-export function quoteReadyEmail(params: { clientName: string; projectName: string; quoteUrl: string }) {
-  const { clientName, projectName, quoteUrl } = params
+export function buildProposalReadyEmail(params: {
+  clientName: string
+  projectName: string
+  proposalUrl: string
+  overview?: string
+}) {
+  const title = `Proposal ready for review: ${params.projectName}`
   const body = `
-    <p class="greeting">Hi ${escapeHtml(clientName)},</p>
-    <p>Your quote for <strong>${escapeHtml(projectName)}</strong> is ready.</p>
-    <p style="color: ${BRAND.muted}; font-size: 14px;">The quote is based on the approved proposal. Review it and approve to get started.</p>
-    <div class="actions">
-      ${button(quoteUrl, "Review Quote", "primary")}
-    </div>
-  `
-  return wrap("Quote ready", body, `Your quote for ${projectName} is ready.`)
-}
-
-export function proposalApprovedEmail(params: { clientName: string; projectName: string; bothApproved: boolean }) {
-  const { clientName, projectName, bothApproved } = params
-  const body = `
-    <p class="greeting">Hi ${escapeHtml(clientName)},</p>
-    <p>Great! You approved the proposal for <strong>${escapeHtml(projectName)}</strong>.</p>
-    <p>${bothApproved ? "The quote has also been approved. We are getting started." : "The quote will follow shortly for your final approval."}</p>
-  `
-  return wrap("Proposal approved", body, `Proposal approved for ${projectName}.`)
-}
-
-export function quoteApprovedEmail(params: { clientName: string; projectName: string; proposalApproved: boolean }) {
-  const { clientName, projectName, proposalApproved } = params
-  const body = `
-    <p class="greeting">Hi ${escapeHtml(clientName)},</p>
-    <p>You approved the quote for <strong>${escapeHtml(projectName)}</strong>.</p>
-    <p>${proposalApproved ? "The proposal has also been approved. We are getting started." : "The proposal approval will follow."}</p>
-    <p>Our team will be in touch shortly to kick things off.</p>
-  `
-  return wrap("Quote approved", body, `Quote approved for ${projectName}.`)
-}
-
-export function projectFullyApprovedEmail(params: { clientName: string; projectName: string }) {
-  const { clientName, projectName } = params
-  const body = `
-    <p class="greeting">Hi ${escapeHtml(clientName)},</p>
-    <p>Your project <strong>${escapeHtml(projectName)}</strong> has been fully approved.</p>
-    <p>Our team will be in touch shortly to kick things off.</p>
-    <div class="actions">
-      ${button(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/public/project`, "View Project", "primary")}
-    </div>
-  `
-  return wrap("Project approved", body, `${projectName} is approved and ready to begin.`)
-}
-
-export function adminProjectApprovedEmail(params: { projectName: string }) {
-  const { projectName } = params
-  const body = `
-    <p><strong>${escapeHtml(projectName)}</strong> has been fully approved by the client.</p>
+    <p class="greeting">Hi ${escapeHtml(params.clientName)},</p>
+    <p>We have completed the proposal for <strong>${escapeHtml(params.projectName)}</strong>.</p>
+    
+    ${
+      params.overview
+        ? `
     <div class="meta">
-      <p><strong>Status:</strong> Complete</p>
-      <p style="margin-top: 4px;"><strong>Next action:</strong> Begin production</p>
+      <div style="font-weight: 600; margin-bottom: 6px;">Overview</div>
+      <div>${escapeHtml(params.overview)}</div>
     </div>
+    `
+        : ""
+    }
+    
+    <p>Please review the proposal details and let us know if you approve or have any feedback.</p>
+    
     <div class="actions">
-      ${button(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/projects`, "Open Dashboard", "primary")}
+      <a href="${escapeHtml(params.proposalUrl)}" class="btn">Review Proposal & Approve →</a>
     </div>
   `
-  return wrap("Project approved", body, `${projectName} is ready to begin.`)
+  return { subject: title, html: wrap(title, body) }
 }
 
-export function meetingCompletedEmail(params: { projectName: string; clientName: string }) {
-  const { projectName, clientName } = params
+export function buildQuoteReadyEmail(params: {
+  clientName: string
+  projectName: string
+  quoteUrl: string
+  total?: string
+}) {
+  const title = `Quote ready for review: ${params.projectName}`
   const body = `
-    <p>The discovery call for <strong>${escapeHtml(projectName)}</strong> has been completed.</p>
-    <p>Proposal and quote have been generated and sent to <strong>${escapeHtml(clientName)}</strong>.</p>
+    <p class="greeting">Hi ${escapeHtml(params.clientName)},</p>
+    <p>The cost estimate for <strong>${escapeHtml(params.projectName)}</strong> is now ready.</p>
+    
+    ${
+      params.total
+        ? `
     <div class="meta">
-      <p><strong>Next action:</strong> Awaiting client approval</p>
+      <div style="font-weight: 600; margin-bottom: 4px;">Total Estimated Investment</div>
+      <div style="font-size: 18px; font-weight: 700; color: ${BRAND.accent};">${escapeHtml(params.total)}</div>
+    </div>
+    `
+        : ""
+    }
+    
+    <p>Please review the itemized quote breakdown at your convenience.</p>
+    
+    <div class="actions">
+      <a href="${escapeHtml(params.quoteUrl)}" class="btn">Review Quote & Approve →</a>
     </div>
   `
-  return wrap("Meeting completed", body, `Discovery call completed for ${projectName}.`)
+  return { subject: title, html: wrap(title, body) }
 }
 
-export function projectApprovedClientEmail(params: { clientName: string; projectName: string }) {
-  const { clientName, projectName } = params
+export function buildWorkflowCompleteEmail(params: {
+  clientName: string
+  projectName: string
+  projectUrl: string
+}) {
+  const title = `Project kickoff complete: ${params.projectName}`
   const body = `
-    <p class="greeting">Hi ${escapeHtml(clientName)},</p>
-    <p>Great news! Your project <strong>${escapeHtml(projectName)}</strong> has been approved and we are getting started.</p>
-    <p>Our team will be in touch shortly with next steps.</p>
+    <p class="greeting">Hi ${escapeHtml(params.clientName)},</p>
+    <p>All initial steps for <strong>${escapeHtml(params.projectName)}</strong> have been generated and configured.</p>
+    <p>You can access your project dashboard anytime to track milestones, deliverables, and updates.</p>
+    
     <div class="actions">
-      ${button(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/public/project`, "View Project", "primary")}
+      <a href="${escapeHtml(params.projectUrl)}" class="btn">Open Project Dashboard →</a>
     </div>
   `
-  return wrap("Project approved", body, `${projectName} is approved and ready to begin.`)
+  return { subject: title, html: wrap(title, body) }
 }
