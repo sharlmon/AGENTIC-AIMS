@@ -34,11 +34,7 @@ export function RoleSelectorModal({ isOpen, onClose }: RoleSelectorModalProps) {
     onClose();
 
     if (role === "creator") {
-      if (isSignedIn) {
-        router.push("/dashboard/overview");
-      } else {
-        router.push("/sign-in");
-      }
+      router.push("/onboarding/creator");
     } else {
       router.push("/intake");
     }
@@ -145,13 +141,13 @@ export function RoleSelectorModal({ isOpen, onClose }: RoleSelectorModalProps) {
                 <ShieldCheck size={26} />
               </div>
               <span style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", color: "#a1a1aa", letterSpacing: "0.05em" }}>
-                Internal Agency Team
+                Creator & Agency Network
               </span>
               <h3 style={{ fontSize: "1.3rem", fontWeight: 700, margin: "6px 0 10px", color: "#ffffff" }}>
                 I am a Creator / Agency Lead
               </h3>
               <p style={{ fontSize: "0.86rem", color: "#a1a1aa", lineHeight: 1.55 }}>
-                Access Mission Control, run zero-touch AI proposal synthesis, track 10-stage workflows, CRM & Talent matching.
+                Register developer or creative credentials, access Mission Control, review AI proposals, and manage project workflows.
               </p>
             </div>
             <div style={{
@@ -163,7 +159,7 @@ export function RoleSelectorModal({ isOpen, onClose }: RoleSelectorModalProps) {
               fontWeight: 600,
               color: "#ffffff",
             }}>
-              Enter Creator Workspace <ArrowRight size={16} />
+              Onboard as Creator <ArrowRight size={16} />
             </div>
           </div>
 
@@ -203,7 +199,7 @@ export function RoleSelectorModal({ isOpen, onClose }: RoleSelectorModalProps) {
                 I am a Client
               </h3>
               <p style={{ fontSize: "0.86rem", color: "#a1a1aa", lineHeight: 1.55 }}>
-                Submit project briefs, join discovery meetings, review contact reports, and approve proposals & quotes.
+                Submit project goals, join discovery meetings, review AI briefs, and approve proposals & quotes.
               </p>
             </div>
             <div style={{
